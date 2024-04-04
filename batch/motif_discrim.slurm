@@ -2,7 +2,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=8000
-#SBATCH -t 00:30:00
+#SBATCH -t 00:20:00
 #SBATCH -o logfiles/motif_discrim_%a.log
 #SBATCH --array 1-2954
 #SBATCH -p standard
@@ -13,7 +13,7 @@ source activate noise-invariant-analysis
 PYTHON=${HOME}/.conda/envs/noise-invariant-analysis/bin/python3
 
 OUTDIR="build/"
-UNITLIST="inputs/all_units.txt"
+UNITLIST="inputs/all_units.tbl"
 UNIT=$(sed -n "${SLURM_ARRAY_TASK_ID}"p ${UNITLIST})
 echo -e "- computing motif discrimination for ${UNIT}"
 
