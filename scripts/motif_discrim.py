@@ -109,7 +109,7 @@ def main(argv=None):
     motifs = split_trials(splitter, unit)
 
     logging.info(
-        "- computing classifier performance using pairwise spike train distances at each background level"
+        "- computing classifier performance using pairwise spike train distances"
     )
     trials = motifs.drop(stimuli_to_drop, level="foreground").rename_axis(
         index=lambda s: s.replace("-", "_")
@@ -175,47 +175,9 @@ def main(argv=None):
             .rename_axis(index="foreground")
         )
 
-    results = spike_trains.groupby("background_dBFS").apply(bootstrap_classifier)
+    # for this study we only care about the responses in the 'clean' condition
+    results = spike_trains.loc[clean_dBFS].pipe(bootstrap_classifier).reset_index()
 
-    logging.info(
-        "- predicting stimuli at each background level using classifier trained on lowest noise condition"
-    )
-    classifier = KNeighborsClassifier(
-        n_neighbors=args.classifier_neighbors, metric="precomputed"
-    )
-    st_train = spike_trains.loc[clean_dBFS]
-    train_dist = pairwise_spike_comparison(
-        st_train, comparison_fun=inv_spike_sync_matrix, stack=False
-    )
-    group_idx, names = train_dist.index.factorize()
-    classifier.fit(train_dist.values, group_idx)
-
-    # for each trial not in the training set, compute spike distances to
-    # training trials, then use the classifier to predict which stimulus was
-    # presented
-    def compare_to_training(st_test):
-        return st_train.apply(
-            lambda st_ref: 1 - pyspike.spike_sync(st_ref, st_test.spikes)
-        ).rename_axis("ref")
-
-    dist_to_clean = (
-        spike_trains.drop(clean_dBFS)
-        .to_frame("spikes")
-        .apply(compare_to_training, axis=1)
-    )
-    predicted = pd.Series(
-        names[classifier.predict(dist_to_clean.values)], index=dist_to_clean.index
-    ).rename("predicted")
-    accuracy = (
-        pd.Series(
-            1.0 * (predicted.index.get_level_values(-1) == predicted),
-            index=predicted.index,
-        )
-        .groupby(["background_dBFS", "foreground"])
-        .mean()
-    )
-
-    results = results.join(accuracy.rename("pred_score")).reset_index()
     if args.output_dir is not None:
         results.insert(0, "unit", args.unit)
         out_path = args.output_dir / f"{args.unit}_motif_discrim.csv"

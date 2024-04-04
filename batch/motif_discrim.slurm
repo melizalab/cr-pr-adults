@@ -2,7 +2,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=8000
-#SBATCH -t 00:60:00
+#SBATCH -t 00:30:00
 #SBATCH -o logfiles/motif_discrim_%a.log
 #SBATCH --array 1-2954
 #SBATCH -p standard
