@@ -10,26 +10,6 @@
 set -e
 module load gcc/11.4.0 openmpi/4.1.4 R/4.3.1
 
-DATASETS=("C269_pretrain" "C269_train" \
-	  "C280_pretrain" "C280_train" \
-	  "C291_pretrain" "C291_train" \
-	  "C293_pretrain" "C293_train" \
-	  "C294_pretrain" "C294_train" \
-	  "C235_pretrain" "C235_train" \
-	  "C250_pretrain" \
-	  "C193_pretrain" "C193_train" \
-	  "C191_pretrain" "C191_train" \
-	  "C197_pretrain" "C197_train" \
-	  "Rb255_pretrain" "Rb255_train" \
-	  "Rb266_pretrain" "Rb266_train" \
-	  "Rb256_pretrain" "Rb256_train" \
-	  "Rb272_pretrain" "Rb272_train" \
-	  "Rb276_pretrain" "Rb276_train" \
-	  "Rb279_pretrain" "Rb279_train" \
-	  "Rb266_pretrain" "Rb266_train" \
-	  "Rb284_pretrain" \
-	  "Rb299_pretrain")
-DATASET=${DATASETS[$SLURM_ARRAY_TASK_ID]}
-echo -e "Computing state-space model for ${DATASET}:"
-
-Rscript scripts/ssm-pretraining.R ${DATASET}
+# this will pick out the unique combinations of <animal>_<phase> in behavior_data.tbl
+awk 'NR>1 {gsub(/[0-9]/, "", $2); print $1"_"$2}' inputs/behavior_data.tbl | sort | uniq | sed -n "${SLURM_ARRAY_TASK_ID}p" | \
+    xargs echo Rscript scripts/ssm-training.R
