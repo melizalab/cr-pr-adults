@@ -1,0 +1,18 @@
+padding: 2.0
+gap: 0.5
+ramp: 0.002
+foreground-dBFS: [-30]
+background-dBFS: [-20, -25, -30, -35, -40, -45, -50, -55, -60, -65, -100]
+foreground:
+  - g29wxi4q
+  - c95zqjxq
+  - vekibwgj
+  - 0oq8ifcb
+  - igmi8fxa
+  - p1mrfhop
+  - l1a3ltpy
+  - 9ex2k0dy
+  - ztqee46x
+  - jkexyrd5
+background:
+  - btwmt59w
