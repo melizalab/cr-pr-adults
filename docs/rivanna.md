@@ -9,9 +9,11 @@ Note that you will need to rsync the `build` directory to the HPC cluster, as th
 
 Start an interactive session:
 
-`ijob -c 2 -A melizalab -p standard --time 1:00:00`
+``` shell
+ijob -c 2 -A melizalab -p standard --time 1:00:00
+```
 
-Activate the required modules and install the dependencies using anaconda and pip.
+Activate the required modules and install the dependencies using anaconda and pip:
 
 ``` shell
 module load anaconda/2023.07-py3.11
@@ -23,7 +25,7 @@ python -m pip install -e .
 Test that the script works:
 
 ``` shell
-python scripts/motif_discrim.py -o temp C42_3_1_c156
+python scripts/motif_discrim.py C42_3_1_c156
 ```
 
 ### Batch: Motif discrimination
