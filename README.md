@@ -25,13 +25,15 @@ Preprocessing:
 
 Analysis and figure generation are run in Jupyter notebooks. See `docs/installation.md` for instructions about setting this up.
 
-- `notebooks/
+- `notebooks/behavior-pretraining.ipynb`: R notebook with basic visualizations for behavior
+- `notebooks/behavior-ssm-summary.ipynb`: R notebook with visualizations for behavior state-space models
+- `notebooks/spike-waveforms.ipynb`: Python notebook to plot spike waveform classification panels
 
 ## Electrophysiology
 
 1. `scripts/unit_waveforms.py -o build inputs/all_units.tbl` to classify units as narrow or wide-spiking. Outputs mean spike waveforms to `build/mean_spike_waveforms.csv` and classifications to `build/mean_spike_features.csv`.
 2. `batch/motif_rates.sh < inputs/all_units.tbl` to compute average firing rates for each motif in the stimulus set. Outputs to `build/*_rates.csv` files.
-3. `batch/motif_discrim.sh < inputs/all_units.tbl` to compute auditory responsiveness. This can also be run on rivanna using `batch/motif_discrim.slurm`. See `docs/rivanna.md` for notes about setting this up.
+3. `batch/motif_discrim.sh < inputs/all_units.tbl` to compute auditory responsiveness. This can (should) be run on rivanna using `batch/motif_discrim.slurm`. See `docs/rivanna.md` for notes about setting this up.
 4. `batch/pairwise_correlations.sh < inputs/recording_metadata.csv`
 
 ### Optional/Deprecated
