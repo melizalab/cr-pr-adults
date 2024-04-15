@@ -25,7 +25,7 @@ python -m pip install -e .
 Test that the script works:
 
 ``` shell
-python scripts/motif_discrim.py C42_3_1_c156
+python scripts/motif_discrim.py -o temp C42_3_1_c156
 ```
 
 ### Batch: Motif discrimination

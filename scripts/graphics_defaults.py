@@ -5,6 +5,7 @@ import matplotlib as mpl
 
 tickparams = {
     "major.size": 2,
+    "major.pad": 1.5,
     "minor.size": 1,
     "labelsize": "small",
     "direction": "out",
