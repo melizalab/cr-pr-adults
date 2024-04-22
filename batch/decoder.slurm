@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2
-#SBATCH --mem=64000
+#SBATCH --mem=32000
 #SBATCH -t 04:00:00
 #SBATCH -o logfiles/decoder_%a.log
 #SBATCH -p standard
