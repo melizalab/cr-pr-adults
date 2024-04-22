@@ -35,7 +35,7 @@ _cache_dir = user_cache_dir("preconstruct", "melizalab")
 _mem = Memory(_cache_dir, verbose=0)
 
 # analysis parameters are hard-coded here
-__version__ = "20240419-1"
+__version__ = "20240422-1"
 desired_time_step = 0.0025  # s
 desired_sampling_rate = 20000  # Hz
 spectrogram_params = {
@@ -125,6 +125,12 @@ def make_cosine_basis(
     return np.column_stack(basis)
 
 
+def compare_spectrograms_cor(actual: np.ndarray, predicted: np.ndarray) -> float:
+    """Compare two spectrograms using correlation coefficient across the entire stimulus"""
+    cc = np.corrcoef(actual.flat, predicted.flat)
+    return cc[0, 1]
+
+
 def main(argv=None):
     import argparse
 
@@ -146,10 +152,16 @@ def main(argv=None):
         help="search this directory for pprox files before the registry",
     )
     parser.add_argument(
-        "--only-units",
-        "-u",
-        type=Path,
-        help="only analyze units listed in this file",
+        "--n-units",
+        "-n",
+        type=int,
+        help="fit the decoder to a subset comprising this many units",
+    )
+    parser.add_argument(
+        "--random-seed",
+        type=int,
+        default=1024,
+        help="set the seed for the random number generator",
     )
     parser.add_argument(
         "units",
@@ -181,13 +193,19 @@ def main(argv=None):
         dataset_name = args.units
     logging.info("  - dataset name: %s", dataset_name)
 
-    if args.only_units is not None:
-        logging.info("  - only using units listed in %s", args.only_units)
-        unit_whitelist = (args.only_units.read_text()).split("\n")
-        unit_names = [u for u in unit_names if u in unit_whitelist]
-        logging.info("  - site has %d units remaining", len(unit_names))
-        if len(unit_names) == 0:
-            parser.exit()
+    if args.n_units is not None:
+        if args.n_units > len(unit_names):
+            parser.error(
+                "Number of units in the subsample must be less than the number in the dataset"
+            )
+        logging.info(
+            "  - randomly selecting %d units (seed=%d)", args.n_units, args.random_seed
+        )
+        rng = np.random.default_rng(args.random_seed)
+        unit_names = rng.permutation(unit_names)[: args.n_units]
+        model_file = f"{dataset_name}_n{args.n_units}_s{args.random_seed}_model.pkl"
+    else:
+        model_file = f"{dataset_name}_model.pkl"
 
     all_trials = []
     for unit_name, path in nbank.find_resources(*unit_names, alt_base=args.pprox_dir):
@@ -338,10 +356,35 @@ def main(argv=None):
     logging.info(
         "  -  best alpha: %.2f; mean score: %.2f", best_alpha, xval.best_score_
     )
-    model_file = args.output_dir / f"{dataset_name}_model.pkl"
-    with open(model_file, "wb") as fp:
-        pickle.dump({"model": xval, "units": rates_embedded.columns}, fp)
-    logging.info("- wrote model parameters to %s", model_file)
+
+    logging.info("- computing predictions for individual motifs")
+    correlations = {}
+    for motif_name in stim_names:
+        X_train = rates_embedded.drop(motif_name)
+        Y_train = stims_processed.drop(motif_name)
+        X_test = rates_embedded.loc[motif_name]
+        Y_test = stims_processed.loc[motif_name]
+        ridge = Pipeline(
+            [
+                ("scaler", StandardScaler()),
+                ("ridge", Ridge(alpha=best_alpha, fit_intercept=True)),
+            ]
+        )
+        fitted = ridge.fit(X_train.values, Y_train.values)
+        pred = fitted.predict(X_test)
+        correlations[motif_name] = compare_spectrograms_cor(Y_test.values, pred)
+        logging.info("  - %s: %.2f", motif_name, correlations[motif_name])
+
+    with open(args.output_dir / model_file, "wb") as fp:
+        pickle.dump(
+            {
+                "model": xval,
+                "units": rates_embedded.columns,
+                "predictions": correlations,
+            },
+            fp,
+        )
+    logging.info("- wrote model parameters to %s", args.output_dir / model_file)
 
 
 if __name__ == "__main__":
