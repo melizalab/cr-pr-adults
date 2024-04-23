@@ -7,14 +7,6 @@ import logging
 import pickle
 from pathlib import Path
 
-# if mkl is installed this can speed things up a bit
-try:
-    from sklearnex import patch_sklearn
-except ImportError:
-    pass
-else:
-    patch_sklearn()
-
 
 import ewave
 import numpy as np
@@ -203,9 +195,9 @@ def main(argv=None):
         )
         rng = np.random.default_rng(args.random_seed)
         unit_names = rng.permutation(unit_names)[: args.n_units]
-        model_file = f"{dataset_name}_n{args.n_units}_s{args.random_seed}_model.pkl"
+        model_file = f"{dataset_name}_n{args.n_units}_s{args.random_seed}_model"
     else:
-        model_file = f"{dataset_name}_model.pkl"
+        model_file = f"{dataset_name}_model"
 
     all_trials = []
     for unit_name, path in nbank.find_resources(*unit_names, alt_base=args.pprox_dir):
@@ -358,7 +350,7 @@ def main(argv=None):
     )
 
     logging.info("- computing predictions for individual motifs")
-    correlations = {}
+    correlations = []
     for motif_name in stim_names:
         X_train = rates_embedded.drop(motif_name)
         Y_train = stims_processed.drop(motif_name)
@@ -371,11 +363,15 @@ def main(argv=None):
             ]
         )
         fitted = ridge.fit(X_train.values, Y_train.values)
+        score = fitted.score(X_test, Y_test)
         pred = fitted.predict(X_test)
-        correlations[motif_name] = compare_spectrograms_cor(Y_test.values, pred)
-        logging.info("  - %s: %.2f", motif_name, correlations[motif_name])
+        corr = compare_spectrograms_cor(Y_test.values, pred)
+        correlations.append({"motif": motif_name, "score": score, "corr_coef": corr})
+        logging.info("  - %s: score=%.3f, corr=%.3f", motif_name, score, corr)
 
-    with open(args.output_dir / model_file, "wb") as fp:
+    model_file = args.output_dir / model_file
+    pd.DataFrame(correlations).to_csv(model_file.with_suffix(".csv"), index=False)
+    with open(model_file.with_suffix(".pkl"), "wb") as fp:
         pickle.dump(
             {
                 "model": xval,
@@ -384,7 +380,7 @@ def main(argv=None):
             },
             fp,
         )
-    logging.info("- wrote model parameters to %s", args.output_dir / model_file)
+    logging.info("- wrote model parameters to %s", model_file)
 
 
 if __name__ == "__main__":
