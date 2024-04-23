@@ -12,8 +12,9 @@ source activate cr-pr-adults
 PYTHON=${HOME}/.conda/envs/cr-pr-adults/bin/python3
 
 OUTDIR="build/"
-CONTROL_FILE="inputs/decoder_tasks.txt"
-sed -n "${SLURM_ARRAY_TASK_ID}"p ${CONTROL_FILE} | read UNIT_LIST N_UNITS SEED
-
 mkdir -p ${OUTDIR}
-echo ${PYTHON} scripts/decoder.py ${OPTIONS} --n-units ${N_UNITS} --random-seed ${SEED} -o ${OUTDIR} ${UNIT_LIST}
+
+CONTROL_FILE="inputs/decoder_tasks.txt"
+sed -n "${SLURM_ARRAY_TASK_ID}"p ${CONTROL_FILE} | { read UNIT_LIST N_UNITS SEED
+${PYTHON} scripts/decoder.py ${OPTIONS} --n-units ${N_UNITS} --random-seed ${SEED} -o ${OUTDIR} ${UNIT_LIST}
+}
