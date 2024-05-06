@@ -9,8 +9,8 @@
 #SBATCH -A melizalab
 set -e
 module load anaconda/2023.07-py3.11
-source activate noise-invariant-analysis
-PYTHON=${HOME}/.conda/envs/noise-invariant-analysis/bin/python3
+source activate cr-pr-adults
+PYTHON=${HOME}/.conda/envs/cr-pr-adults/bin/python3
 
 OUTDIR="build/"
 UNITLIST="inputs/all_units.tbl"
