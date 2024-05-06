@@ -12,7 +12,7 @@ def count_units(path):
 
 input_dir = Path("build")
 unit_lists = ["cr_units.txt", "pr_units.txt"]
-min_units = 50
+min_units = 40
 n_conditions = 15
 n_replicates = 100
 initial_seed = 1024
