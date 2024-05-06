@@ -195,9 +195,9 @@ def main(argv=None):
         )
         rng = np.random.default_rng(args.random_seed)
         unit_names = rng.permutation(unit_names)[: args.n_units]
-        model_file = f"{dataset_name}_n{args.n_units}_s{args.random_seed}_model"
     else:
-        model_file = f"{dataset_name}_model"
+        args.n_units = len(unit_names)
+        args.random_seed = 0
 
     all_trials = []
     for unit_name, path in nbank.find_resources(*unit_names, alt_base=args.pprox_dir):
@@ -369,8 +369,14 @@ def main(argv=None):
         correlations.append({"motif": motif_name, "score": score, "corr_coef": corr})
         logging.info("  - %s: score=%.3f, corr=%.3f", motif_name, score, corr)
 
-    model_file = args.output_dir / model_file
-    pd.DataFrame(correlations).to_csv(model_file.with_suffix(".csv"), index=False)
+    model_file = (
+        args.output_dir / f"{dataset_name}_n{args.n_units}_s{args.random_seed}_model"
+    )
+    data = pd.DataFrame(correlations)
+    data.insert(0, "seed", args.random_seed)
+    data.insert(0, "n_units", args.n_units)
+    data.insert(0, "dataset", dataset_name)
+    data.to_csv(model_file.with_suffix(".csv"), index=False)
     with open(model_file.with_suffix(".pkl"), "wb") as fp:
         pickle.dump(
             {
