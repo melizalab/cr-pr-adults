@@ -4,6 +4,7 @@
 #SBATCH --mem=32000
 #SBATCH -t 04:00:00
 #SBATCH -o logfiles/decoder_%a.log
+#SBATCH --array 1-2902
 #SBATCH -p standard
 #SBATCH -A melizalab
 set -e
