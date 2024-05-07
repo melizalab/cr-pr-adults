@@ -1,12 +1,9 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 # -*- mode: python -*-
 """Compute pairwise correlations for all units in a site"""
-import json
 import itertools
-from pathlib import Path
 import logging
-import sys
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -72,7 +69,7 @@ def main(argv=None):
 
     outfile = args.data_dir / f"{args.site}_correlations.csv"
     logging.info("- output to %s", outfile)
-    with open(outfile, "wt") as fp:
+    with open(outfile, "w") as fp:
         print(
             "unit_1,unit_2,signal,evoked_noise,evoked_shifted,evoked_noise_c,spont_noise,spont_shifted,spont_noise_c",
             file=fp,

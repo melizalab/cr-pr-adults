@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 # -*- mode: python -*-
 """ Compute discriminability using a classifier between responses to different motifs. """
 import json
@@ -10,17 +9,16 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import pyspike
 from core import (
     MotifSplitter,
+    inv_spike_sync_matrix,
     pairwise_spike_comparison,
     split_trials,
     trial_to_spike_train,
-    inv_spike_sync_matrix,
 )
 from dlab import nbank
-from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import LeaveOneOut, cross_val_score
+from sklearn.neighbors import KNeighborsClassifier
 
 # For discriminability analysis, we clip all responses to the shortest stimulus
 # to remove information encoded in the response length. This stimulus is much

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # -*- mode: python -*-
 """ Core functions for processing responses and stimuli """
 from typing import Callable, Dict

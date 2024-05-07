@@ -1,15 +1,16 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 # -*- mode: python -*-
 """Compute average firing rates for responses to motifs"""
 import json
 import logging
-from pathlib import Path
 import sys
+from pathlib import Path
 
 import pandas as pd
 from core import MotifBackgroundSplitter, split_trials
 from dlab import nbank
+
+clean_dBFS = -100
 
 
 def main(argv=None):
@@ -39,7 +40,7 @@ def main(argv=None):
         split_trials(MotifBackgroundSplitter(), unit)
         .reset_index()
         .rename(columns=lambda s: s.replace("-", "_"))
-        .set_index(["background_dBFS", "foreground_dBFS", "source_trial", "foreground"])
+        .set_index(["background_dBFS", "source_trial", "foreground"])
     )
 
     # compute rates
@@ -73,6 +74,47 @@ def main(argv=None):
     else:
         outfile = sys.stdout
     data.to_csv(outfile, index=False)
+
+    # fit a GLM to the counts to estimate significance - needs some tweaking
+    # pooled = (
+    #     data.query("foreground == 'silence' | background_dBFS==-100")
+    #     .query("foreground != 'background'")
+    #     .groupby("foreground")
+    #     .aggregate({"n_events": ["sum"], "interval_end": ["sum"]})
+    #     .droplevel(-1, axis=1)
+    # )
+    # # ensure there is one spike in the silence condition
+    # pooled.loc["silence", "n_events"] = max(pooled.loc["silence", "n_events"], 1)
+    # motif_names = ["silence"] + list(set(pooled.index.unique()) - {"silence"})
+    # pooled = pooled.reset_index()
+    # pooled["foreground"] = pd.Categorical(
+    #     pooled.foreground, categories=motif_names, ordered=True
+    # )
+    # lm = smf.glm(
+    #     "n_events ~ foreground",
+    #     data=pooled,
+    #     family=sm.families.Poisson(),
+    #     offset=np.log(pooled["interval_end"]),
+    # ).fit()
+    # conf_int = lm.conf_int()
+    # coefs = pd.DataFrame(
+    #     {
+    #         "stimulus": motif_names,
+    #         "coef": lm.params,
+    #         "std err": lm.bse,
+    #         "pvalue": smt.multipletests(lm.pvalues, method="sidak")[1],
+    #         "coef_lcl": conf_int[0],
+    #         "coef_ucl": conf_int[1],
+    #     }
+    # ).reset_index(drop=True)
+    # coefs["responsive"] = (coefs.coef > 0) & (coefs.pvalue < 0.05)
+    # if args.output_dir is not None:
+    #     outfile = args.output_dir / f"{args.unit}_rate_coefs.csv"
+    #     coefs.insert(0, "unit", args.unit)
+    #     logging.info("- wrote parameter estimates to %s", outfile)
+    # else:
+    #     outfile = sys.stdout
+    # coefs.to_csv(outfile, index=False)
 
 
 if __name__ == "__main__":

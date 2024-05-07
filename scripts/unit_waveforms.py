@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 # -*- mode: python -*-
 """Compute features from average spike waveforms """
 import logging
@@ -69,7 +68,7 @@ def main(argv=None):
     logging.basicConfig(
         format="%(message)s", level=logging.DEBUG if args.debug else logging.INFO
     )
-    with open(args.unitfile, "rt") as fp:
+    with open(args.unitfile) as fp:
         unit_names = [clean for line in fp if len(clean := line.strip()) > 0]
 
     waveforms = []
