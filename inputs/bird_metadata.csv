@@ -15,10 +15,10 @@ Rb256,a27f474e,F,CR,80,3,yes
 Rb272,b486f544,M,CR,74,4,yes
 Rb276,acaaf277,F,CR,60,2,yes
 Rb279,2aa653e5,M,CR,61,3,yes
-Rb284,dceab3c7,F,PR,67,NA,yes
-Rb299,8b472afa,M,PR,75,NA,yes
-Rb300,4db0aaac,F,PR,73,NA,yes
-C313,164e007a,F,PR,70,NA,yes
+Rb284,dceab3c7,F,PR,67,1,yes
+Rb299,8b472afa,M,PR,75,1,yes
+Rb300,4db0aaac,F,PR,73,1,yes
+C313,164e007a,F,PR,70,0,yes
 C114,cec999a5,F,CR,70,NA,yes
 C155,52e9218a,M,CR,94,NA,yes
 Rb261,1e853c0d,F,CR,63,NA,yes
