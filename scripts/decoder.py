@@ -206,7 +206,7 @@ def main(argv=None):
         all_trials.extend(
             trial | {"unit": unit_name}
             for trial in pprox_data["pprox"]
-            if trial["stimulus"]["name"].endswith("-100")
+            # if trial["stimulus"]["name"].endswith("-100")
         )
 
     logging.info("  - loaded %d trials", len(all_trials))
@@ -221,9 +221,9 @@ def main(argv=None):
         recording.append(trial_split)
     recording = (
         pd.concat(recording)
-        .drop(columns=["foreground-dBFS", "background", "background-dBFS"])
+        .drop(columns=["foreground-dBFS", "background"])
         .rename(columns={"foreground": "stimulus"})
-        .set_index(["unit", "stimulus"])
+        .set_index(["background-dBFS", "unit", "stimulus"])
         .sort_index()
     )
 
@@ -251,7 +251,7 @@ def main(argv=None):
         names=("stimulus", "time"),
     )
 
-    logging.info("- pooling and binning responses")
+    logging.info("- pooling and binning responses for background-dBFS -100")
 
     def bin_responses(trials):
         stim = trials.name
@@ -275,8 +275,9 @@ def main(argv=None):
             columns=trials.index.get_level_values(0),
         )
 
-    rate_data = (
-        recording.groupby(["unit", "stimulus"])
+    clean_rate_data = (
+        recording.loc[-100]
+        .groupby(["unit", "stimulus"])
         .agg(
             events=pd.NamedAgg(column="events", aggfunc=pool_spikes),
             trials=pd.NamedAgg(column="events", aggfunc=len),
@@ -313,23 +314,25 @@ def main(argv=None):
             names=("unit", "lag"),
         )
 
-    rates_embedded = rate_data.groupby("stimulus").apply(delay_embed_trial)
+    clean_rates_embedded = clean_rate_data.groupby("stimulus").apply(delay_embed_trial)
     # this is really important to ensure that all rows match in the two dataframes
-    rates_embedded, stims_processed = rates_embedded.align(
+    clean_rates_embedded, clean_stims_processed = clean_rates_embedded.align(
         stims_processed, join="left", axis=0
     )
     assert (
-        rates_embedded.shape[0] == stims_processed.shape[0]
+        clean_rates_embedded.shape[0] == clean_stims_processed.shape[0]
     ), "dimensions of data don't match"
     assert all(
-        rates_embedded.index == stims_processed.index
+        clean_rates_embedded.index == clean_stims_processed.index
     ), "indices of data don't match"
 
     # won't perfectly align with stimuli but should be close enough
     n_folds = len(stim_names)
     logging.info("- %d-fold cross-validating for hyperparameters", n_folds)
     logging.info(
-        "  -  X shape is %s, Y shape is %s", rates_embedded.shape, stims_processed.shape
+        "  -  X shape is %s, Y shape is %s",
+        clean_rates_embedded.shape,
+        clean_stims_processed.shape,
     )
     ridge = Pipeline(
         [("scaler", StandardScaler()), ("ridge", Ridge(fit_intercept=True))]
@@ -341,7 +344,7 @@ def main(argv=None):
         n_jobs=2,
         verbose=1,
     )
-    xval.fit(rates_embedded.values, stims_processed.values)
+    xval.fit(clean_rates_embedded.values, clean_stims_processed.values)
 
     best_alpha = xval.best_params_["ridge__alpha"]
     logging.info(
@@ -351,10 +354,10 @@ def main(argv=None):
     logging.info("- computing predictions for individual motifs")
     correlations = []
     for motif_name in stim_names:
-        X_train = rates_embedded.drop(motif_name)
-        Y_train = stims_processed.drop(motif_name)
-        X_test = rates_embedded.loc[motif_name]
-        Y_test = stims_processed.loc[motif_name]
+        X_train = clean_rates_embedded.drop(motif_name)
+        Y_train = clean_stims_processed.drop(motif_name)
+        X_test = clean_rates_embedded.loc[motif_name]
+        Y_test = clean_stims_processed.loc[motif_name]
         ridge = Pipeline(
             [
                 ("scaler", StandardScaler()),
@@ -380,7 +383,7 @@ def main(argv=None):
         pickle.dump(
             {
                 "model": xval,
-                "units": rates_embedded.columns,
+                "units": clean_rates_embedded.columns,
                 "predictions": correlations,
             },
             fp,
