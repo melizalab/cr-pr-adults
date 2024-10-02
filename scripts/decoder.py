@@ -26,7 +26,7 @@ _cache_dir = user_cache_dir("preconstruct", "melizalab")
 _mem = Memory(_cache_dir, verbose=0)
 
 # analysis parameters are hard-coded here
-__version__ = "20240422-1"
+__version__ = "20241002-1"
 desired_time_step = 0.0025  # s
 desired_sampling_rate = 20000  # Hz
 spectrogram_params = {
@@ -40,6 +40,7 @@ decoder_window = (0.0, 0.2)  # s
 n_basis = 20
 linearity_factor = 20
 alpha_candidates = np.logspace(-1, 7, 30)
+clean_dBFS = -100
 
 
 class MotifSplitter:
@@ -155,6 +156,11 @@ def main(argv=None):
         help="set the seed for the random number generator",
     )
     parser.add_argument(
+        "--predict-noisy",
+        action="store_true",
+        help="if set, compute predictions from responses to noisy stimuli",
+    )
+    parser.add_argument(
         "units",
         help="path of a file with a list of units, or name of a site to analyze",
     )
@@ -251,7 +257,7 @@ def main(argv=None):
         names=("stimulus", "time"),
     )
 
-    logging.info("- pooling and binning responses for background-dBFS -100")
+    logging.info("- pooling and binning responses for background-dBFS (%d)", clean_dBFS)
 
     def bin_responses(trials):
         stim = trials.name
@@ -276,7 +282,7 @@ def main(argv=None):
         )
 
     clean_rate_data = (
-        recording.loc[-100]
+        recording.loc[clean_dBFS]
         .groupby(["unit", "stimulus"])
         .agg(
             events=pd.NamedAgg(column="events", aggfunc=pool_spikes),
@@ -353,6 +359,10 @@ def main(argv=None):
 
     logging.info("- computing predictions for individual motifs")
     correlations = []
+    noise_levels = (
+        recording.index.get_level_values("background-dBFS").unique().drop(clean_dBFS)
+    )
+
     for motif_name in stim_names:
         X_train = clean_rates_embedded.drop(motif_name)
         Y_train = clean_stims_processed.drop(motif_name)
@@ -365,11 +375,62 @@ def main(argv=None):
             ]
         )
         fitted = ridge.fit(X_train.values, Y_train.values)
-        score = fitted.score(X_test, Y_test)
         pred = fitted.predict(X_test)
         corr = compare_spectrograms_cor(Y_test.values, pred)
-        correlations.append({"motif": motif_name, "score": score, "corr_coef": corr})
-        logging.info("  - %s: score=%.3f, corr=%.3f", motif_name, score, corr)
+        correlations.append(
+            {
+                "motif": motif_name,
+                "background_dBFS": clean_dBFS,
+                "corr_coef_actual": corr,
+                "corr_coef_pred_clean": 1.0,
+            }
+        )
+        logging.info("  - %s, noise=%.1f dBFS: corr=%.3f", motif_name, -100, corr)
+
+        for noise_level in noise_levels:
+            noise_recording = recording.loc[noise_level].xs(
+                motif_name, level="stimulus", drop_level=False
+            )
+            # compute rates
+            noise_rate_data = (
+                noise_recording.groupby(["unit", "stimulus"])
+                .agg(
+                    events=pd.NamedAgg(column="events", aggfunc=pool_spikes),
+                    trials=pd.NamedAgg(column="events", aggfunc=len),
+                    interval_end=pd.NamedAgg(column="interval_end", aggfunc="max"),
+                )
+                .groupby("stimulus")
+                .apply(bin_responses)
+            )
+            # delay embedding
+            noise_rates_embedded = noise_rate_data.groupby("stimulus").apply(
+                delay_embed_trial
+            )
+            # ensure rows match and select the test stimulus only
+            noise_rates_embedded, noise_stims_processed = noise_rates_embedded.align(
+                stims_processed, join="left", axis=0
+            )
+            assert (
+                noise_rates_embedded.shape[0] == noise_stims_processed.shape[0]
+            ), "dimensions of data don't match"
+            assert all(
+                noise_rates_embedded.index == noise_stims_processed.index
+            ), "indices of data don't match"
+            pred_noisy = fitted.predict(noise_rates_embedded)
+            corr_pred = compare_spectrograms_cor(pred, pred_noisy)
+            correlations.append(
+                {
+                    "motif": motif_name,
+                    "background_dBFS": noise_level,
+                    "corr_coef_actual": compare_spectrograms_cor(
+                        Y_test.values, pred_noisy
+                    ),
+                    "corr_coef_pred_clean": corr_pred,
+                }
+            )
+            logging.info(
+                "  - %s, noise=%.1f dBFS: corr=%.3f", motif_name, noise_level, corr_pred
+            )
 
     model_file = (
         args.output_dir / f"{dataset_name}_n{args.n_units}_s{args.random_seed}_model"
