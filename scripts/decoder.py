@@ -26,7 +26,7 @@ _cache_dir = user_cache_dir("preconstruct", "melizalab")
 _mem = Memory(_cache_dir, verbose=0)
 
 # analysis parameters are hard-coded here
-__version__ = "20241002-1"
+__version__ = "20241003-1"
 desired_time_step = 0.0025  # s
 desired_sampling_rate = 20000  # Hz
 spectrogram_params = {
@@ -376,16 +376,25 @@ def main(argv=None):
         )
         fitted = ridge.fit(X_train.values, Y_train.values)
         pred = fitted.predict(X_test)
+        score = fitted.score(X_test, Y_test)
         corr = compare_spectrograms_cor(Y_test.values, pred)
         correlations.append(
             {
                 "motif": motif_name,
                 "background_dBFS": clean_dBFS,
+                "score_actual": score,
                 "corr_coef_actual": corr,
+                "score_pred_clean": 1.0,
                 "corr_coef_pred_clean": 1.0,
             }
         )
-        logging.info("  - %s, noise=%.1f dBFS: corr=%.3f", motif_name, -100, corr)
+        logging.info(
+            "  - %s, noise=%.1f dBFS: score=%.3f, corr=%.3f",
+            motif_name,
+            -100,
+            score,
+            corr,
+        )
 
         for noise_level in noise_levels:
             noise_recording = recording.loc[noise_level].xs(
@@ -417,19 +426,27 @@ def main(argv=None):
                 noise_rates_embedded.index == noise_stims_processed.index
             ), "indices of data don't match"
             pred_noisy = fitted.predict(noise_rates_embedded)
+            score_actual = fitted.score(noise_rates_embedded, Y_test)
+            score_pred = fitted.score(noise_rates_embedded, pred)
             corr_pred = compare_spectrograms_cor(pred, pred_noisy)
             correlations.append(
                 {
                     "motif": motif_name,
                     "background_dBFS": noise_level,
+                    "score_actual": score_actual,
                     "corr_coef_actual": compare_spectrograms_cor(
                         Y_test.values, pred_noisy
                     ),
+                    "socre_pred_clean": score_pred,
                     "corr_coef_pred_clean": corr_pred,
                 }
             )
             logging.info(
-                "  - %s, noise=%.1f dBFS: corr=%.3f", motif_name, noise_level, corr_pred
+                "  - %s, noise=%.1f dBFS: score=%.3f, corr=%.3f",
+                motif_name,
+                noise_level,
+                score_pred,
+                corr_pred,
             )
 
     model_file = (
