@@ -26,7 +26,7 @@ _cache_dir = user_cache_dir("preconstruct", "melizalab")
 _mem = Memory(_cache_dir, verbose=0)
 
 # analysis parameters are hard-coded here
-__version__ = "20241003-1"
+__version__ = "20241003-2"
 desired_time_step = 0.0025  # s
 desired_sampling_rate = 20000  # Hz
 spectrogram_params = {
@@ -437,7 +437,7 @@ def main(argv=None):
                     "corr_coef_actual": compare_spectrograms_cor(
                         Y_test.values, pred_noisy
                     ),
-                    "socre_pred_clean": score_pred,
+                    "score_pred_clean": score_pred,
                     "corr_coef_pred_clean": corr_pred,
                 }
             )
