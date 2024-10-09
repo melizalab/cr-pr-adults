@@ -31,10 +31,31 @@ Analysis and figure generation are run in Jupyter notebooks. See `docs/installat
 
 ## Electrophysiology
 
+### Initial preprocessing
+
 1. `scripts/unit_waveforms.py -o build inputs/all_units.tbl` to classify units as narrow or wide-spiking. Outputs mean spike waveforms to `build/mean_spike_waveforms.csv` and classifications to `build/mean_spike_features.csv`.
 2. `batch/motif_rates.sh < inputs/all_units.tbl` to compute average firing rates for each motif in the stimulus set. Outputs to `build/*_rates.csv` files.
 3. `batch/motif_discrim.sh < inputs/all_units.tbl` to compute auditory responsiveness. This can (should) be run on rivanna using `batch/motif_discrim.slurm`. See `docs/rivanna.md` for notes about setting this up.
 4. `batch/pairwise_correlations.sh < inputs/recording_metadata.csv`
+
+### Single-Unit Analysis
+
+1. `notebooks/spike-waveforms-figure.ipynb` generates Figure 2B. 
+2. `notebooks/motif-resp-example-figure.ipynb` generates Figure 2C (example raster plots) and Figure 5A-C (example discriminability and selectivity plots).
+3. `notebooks/single-unit-analysis.ipynb` will run a GLM for each unit to determine how many motifs evoke significant responses and generates the summary panels in Figures 3 and 5. It also generates the `build/cr_units.txt` and `build/pr_units.txt` control files used by the decoder.
+4. `notebooks/pairwise-corr.ipynb` generates panels for Figure 4.
+
+### Decoder Analysis
+
+Individual decoder models can be fit using `scripts/decoder.py`. For example, `venv/bin/python scripts/decoder.py -o build build/cr_units.txt` will load the data for all the CR units, compute average firing rates and delay-embed them, use cross-validation to determine the optimal ridge regression penalty hyperparameter, and then do train/test splits for each motif to compute predictions from the responses to clean and noise-embedded stimuli.
+
+The full analysis (Figure 6C) requires doing this multiple times for subsamples CR and PR populations, so it should be run on an HPC cluster (see `docs/rivanna.md` for how we do this at UVA)
+
+1. The first step is to generate a table of jobs to run. `venv/bin/python scripts/make_decoder_tasks.py > inputs/decoder_tasks.txt` will read in `build/cr_units.txt` and `build/pr_units.txt` and make this table, with 100 replicates for 15 different ensemble sizes.
+2. On your HPC cluster, run `sbatch batch/decoder.slurm`
+3. Collate the CSV outputs into a single file: `awk 'FNR==1 && NR!=1{next;}{print}' build/*_model.csv  > build/decoder_predictions.csv`
+4. `notebooks/decoder-summary.ipynb` generates 
+
 
 ### Optional/Deprecated
 
