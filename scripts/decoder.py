@@ -26,7 +26,7 @@ _cache_dir = user_cache_dir("preconstruct", "melizalab")
 _mem = Memory(_cache_dir, verbose=0)
 
 # analysis parameters are hard-coded here
-__version__ = "20241003-2"
+__version__ = "20241022-1"
 desired_time_step = 0.0025  # s
 desired_sampling_rate = 20000  # Hz
 spectrogram_params = {
