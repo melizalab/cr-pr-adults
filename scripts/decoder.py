@@ -35,7 +35,7 @@ spectrogram_params = {
     "f_min": 1000,  # Hz
     "f_max": 8500,  # Hz
 }
-spectrogram_compression = 10.0
+spectrogram_compression = 0.01
 decoder_window = (0.0, 0.2)  # s
 n_basis = 20
 linearity_factor = 20
@@ -395,6 +395,9 @@ def main(argv=None):
             score,
             corr,
         )
+        if motif_name == "9ex2k0dy":
+            example_actual = Y_test.copy()
+            example_predicted = pred.copy()
 
         for noise_level in noise_levels:
             noise_recording = recording.loc[noise_level].xs(
@@ -463,6 +466,7 @@ def main(argv=None):
                 "model": xval,
                 "units": clean_rates_embedded.columns,
                 "predictions": correlations,
+                "example": {"actual": example_actual, "pred": example_predicted},
             },
             fp,
         )
