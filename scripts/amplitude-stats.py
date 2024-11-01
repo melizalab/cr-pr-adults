@@ -18,17 +18,20 @@ file as an double-precision array with dimensions n_mod_freqs by n_segments.
 """
 import os
 import argparse
+import datetime
 import logging
 import csv
 from pathlib import Path
+from typing import NamedTuple, Optional
 
+import arf
+import h5py
 from tqdm import tqdm
 import numpy as np
 from scipy import signal
 import libtfr
 
 from core import setup_log
-from arf_tools import Segment, SegmentIterator
 from filters import A_weighting
 
 # disable locking - neurobank archive is probably on an NFS share
@@ -45,6 +48,86 @@ calibration_amplitude_dB = 80.0
 
 amplitude_quantiles = [0, 0.25, 0.5, 0.75, 1.0]
 amplitude_quantile_names = [f"ampl_q{q*100:.0f}" for q in amplitude_quantiles]
+
+
+class Segment(NamedTuple):
+    time: datetime.datetime
+    dataset: h5py.Dataset
+    start_sample: int
+    end_sample: int
+
+
+class SegmentIterator:
+    """Divides a collection of ARF files into segments. For performance
+    reasons, all the segments have to have the same sampling rate.
+
+    """
+
+    sampling_rate = None
+    calibration_segment = None
+    segments = []
+
+    def __init__(self, files, segment_size: float):
+        segment_shift = segment_size / 2
+        for file in files:
+            handle = h5py.File(file, "r")
+            # the calibration recording should be the first one; if there are
+            # multiple files they may have their own copies of the calibration,
+            # but this will always be first created.
+            for entry_name in arf.keys_by_creation(handle):
+                entry = handle[entry_name]
+                if not arf.is_entry(entry) or "pcm_000" not in entry:
+                    log.debug("- %s/%s: not a recording, skipping", file, entry_name)
+                    continue
+                dset = entry["pcm_000"]
+                entry_start = arf.timestamp_to_datetime(entry.attrs["timestamp"])
+                # if no explicitly labeled calibration recording, use the first entry
+                if self.calibration_segment is None:
+                    log.info("- %s/%s: using for calibration", file, entry_name)
+                    self.calibration_segment = Segment(
+                        time=entry_start,
+                        dataset=dset,
+                        start_sample=0,
+                        end_sample=dset.size,
+                    )
+                    self.sampling_rate = dset.attrs["sampling_rate"]
+                elif entry_name == "calibration":
+                    log.debug(
+                        "- %s/%s: already found a calibration recording, skipping",
+                        file,
+                        entry_name,
+                    )
+                else:
+                    dset_offset = dset.attrs.get("offset", 0)
+                    if dset.attrs["sampling_rate"] != self.sampling_rate:
+                        raise ValueError(
+                            "- all recordings must have the same sampling rate"
+                        )
+                    nsamples = int(segment_size * self.sampling_rate)
+                    nshift = int(segment_shift * self.sampling_rate)
+                    i = 0
+                    for i, segment_end in enumerate(range(nsamples, dset.size, nshift)):
+                        segment_start = segment_end - nsamples
+                        self.segments.append(
+                            Segment(
+                                time=entry_start
+                                + datetime.timedelta(
+                                    seconds=(dset_offset + segment_start)
+                                    / self.sampling_rate
+                                ),
+                                dataset=dset,
+                                start_sample=segment_start,
+                                end_sample=segment_end,
+                            )
+                        )
+                    log.debug("- %s/%s: %d segments", file, entry_name, i)
+        log.info("- found a total of %d segments", len(self.segments))
+
+    def __len__(self):
+        return len(self.segments)
+
+    def __iter__(self):
+        return iter(self.segments)
 
 
 class AWeightTransform:
