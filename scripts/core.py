@@ -1,8 +1,10 @@
 # -*- mode: python -*-
 """ Core functions for processing responses and stimuli """
 import logging
-from typing import Callable, Dict, TypedDict
+from typing import Callable, Dict, TypedDict, Union
+from pathlib import Path
 
+import ewave
 import numpy as np
 import pandas as pd
 import pyspike
@@ -25,6 +27,63 @@ class Waveform(TypedDict):
     sampling_rate: float
     duration: float
     dBFS: float
+
+
+def load_wave(file: Union[str, Path]) -> Waveform:
+    if isinstance(file, Path):
+        path = file
+    else:
+        path = nbank.find_resource(file)
+    with ewave.open(path, "r") as fp:
+        if fp.nchannels != 1:
+            raise ValueError(f"{file} has more than one channel")
+        data = ewave.rescale(fp.read(), "float32")
+        ampl = dBFS(data)
+        return Waveform(
+            name=file,
+            signal=data,
+            sampling_rate=fp.sampling_rate,
+            duration=fp.nframes / fp.sampling_rate,
+            dBFS=ampl,
+        )
+
+
+def dBFS(signal: np.ndarray) -> float:
+    """Returns the RMS level of signal, in dB FS"""
+    rms = np.sqrt(np.mean(signal * signal))
+    return 20 * np.log10(rms) + 3.0103
+
+
+def resample(song: Waveform, target: float) -> None:
+    """Resample the data in a song to target rate (in Hz)"""
+    import samplerate
+
+    if song["sampling_rate"] == target:
+        return song
+    ratio = 1.0 * target / song["sampling_rate"]
+    # NB: this silently converts data to float32
+    data = samplerate.resample(song["signal"], ratio, "sinc_best")
+    song.update(
+        signal=data, duration=data.size / target, sampling_rate=target, dBFS=dBFS(data)
+    )
+
+
+def truncate(song: Waveform, duration: Union[int, float]) -> None:
+    """Truncate the signal to the desired length in samples [int] or seconds [float]"""
+    if isinstance(duration, float):
+        duration = int(duration * song["sampling_rate"])
+    if song["signal"].size < duration:
+        raise ValueError(f"signal is too short to be truncated to desired length")
+    data = song["signal"][:duration]
+    song.update(signal=data, duration=duration / song["sampling_rate"], dBFS=dBFS(data))
+
+
+def rescale(song: Waveform, target: float) -> None:
+    """Rescale the data in a song to a target dBFS"""
+    data = song["signal"]
+    scale = 10 ** ((target - song["dBFS"]) / 20)
+    song.update(signal=data * scale)
+    song.update(dBFS=dBFS(song["signal"]))
 
 
 class NullSplitter:
