@@ -39,5 +39,3 @@ IRkernel::installspec(name = 'ir43', displayname = 'R 4.3')
 ## Running the code
 
 In Jupyter Lab, you'll need to set the kernel for your notebook to `cr-pr-adults`. If you're running a script, make sure to activate your venv first (`source venv/bin/activate`) or run it using the virtualenv python (`venv/bin/python <my-script>`)
-
-See the [lab wiki](https://gracula.psyc.virginia.edu/wiki/Computing/RemotePythonGuide/) for instructions on how to run a persistent jupyter lab server for your project.

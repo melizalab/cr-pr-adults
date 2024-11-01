@@ -21,6 +21,37 @@ about installing dependencies, using Rivanna, and other topics.
 - behavior trial data
 - neural data
 
+## Analysis
+
+Temporary files are created in the `build` directory. You may need to create this first if it doesn't already exist. To restart the analysis from the beginning, you can just clear this directory out.
+
+The code is a combination of scripts and Jupyter notebooks. You typically need to run the scripts first and then the notebooks.
+
+If you're starting from a fresh repository, see `docs/installation.md` for instructions about how to set up your Python and R environments. There are some steps that more or less need to be run on a high-performance computing cluster. See `docs/rivanna.md` for the steps we use to set this up on UVA's HPC cluster Rivanna.
+
+### Acoustical environment statistics
+
+The amplitude statistics for the colony and pair settings are in the `zebf-social-acoustical-stats` dataset as CSV files. The texture statistics (McDermott and Simoncelli 2011) need to be calculated from the sample wave files.
+
+For the colony:
+
+``` shell
+venv/bin/python scripts/textures-stats.py --output build/cr-family_texture-stats.h5 datasets/zebf-social-acoustical-stats/cobalt_57_family*wav
+```
+
+And for the clean songs:
+
+``` shell
+venv/bin/python scripts/texture-stats.py --output build/clean-songs_texture-stats.h5 datasets/zebf-social-acoustical-stats/*songs*wav
+```
+
+Pink noise is used as a comparison for some plots. We use the same sample from the McDermott source distribution:
+
+``` shell
+venv/bin/python scripts/texture-stats.py --duration 20 --output build/pink-noise_texture-stats.h5 datasets/zebf-social-acoustical-stats/pink_noise_20s_20kHz.wav
+```
+
+The panels for Figure 1 can be generated using the `notebooks/acoustical-stats.ipynb` Jupyter notebook.
 
 ## Behavior
 

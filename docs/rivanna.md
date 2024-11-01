@@ -1,9 +1,9 @@
 
 ## Rivanna:
 
-A number of analyses can take a long time to run and benefit greatly from using a high-performance computing cluster. These instructions are for the UVA HPC cluster but should be possible to adapt to other systems using SLURM. Some of the top-level module dependencies may have changed, but the code should still run if they are updated.
+A number of analyses can take a long time to run and benefit greatly from using a high-performance computing cluster. These instructions are for the UVA HPC cluster but should be possible to adapt to other systems that use SLURM. Some of the top-level module dependencies may have changed, but the code should still run if they are updated.
 
-Note that you will need to rsync the `build` directory to the HPC cluster, as the batch jobs expect the spike response or behavioral data to be there.
+Note that if you do preprocessing on another machine, you need to copy the `build` directory to the HPC cluster, and then copy it back to your main analysis machine.
 
 ### Setup
 
