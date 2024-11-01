@@ -1,11 +1,30 @@
 # -*- mode: python -*-
 """ Core functions for processing responses and stimuli """
-from typing import Callable, Dict
+import logging
+from typing import Callable, Dict, TypedDict
 
 import numpy as np
 import pandas as pd
 import pyspike
 from dlab import nbank, pprox
+
+
+def setup_log(log, debug=False):
+    ch = logging.StreamHandler()
+    formatter = logging.Formatter("%(message)s")
+    loglevel = logging.DEBUG if debug else logging.INFO
+    log.setLevel(loglevel)
+    ch.setLevel(loglevel)
+    ch.setFormatter(formatter)
+    log.addHandler(ch)
+
+
+class Waveform(TypedDict):
+    name: str
+    signal: np.ndarray
+    sampling_rate: float
+    duration: float
+    dBFS: float
 
 
 class NullSplitter:

@@ -2,19 +2,25 @@
 
 This project examines how the social-acoustical environment a zebra finch
 experiences during childhood influences auditory processing and perception in
-adulthood. This is a spin-off of the noise-invariant-analysis project, but
-starting from a clean git repository and only including scripts and notebooks
-needed for the planned paper.
+adulthood.
 
-This file describes the key steps in running the analysis. See the `docs` folder
-for information about installing dependencies, using Rivanna, and other topics.
+This file describes the key steps in running the analysis, including links to
+data files hosted on public repositories.. See the `docs` folder for information
+about installing dependencies, using Rivanna, and other topics.
 
-## Key control files
+## Metadata
 
 - `inputs/bird_metadata.csv`: for all the birds included in the study, this table has the name, unique identifier, sex, rearing condition, age (at start of recording or training), and number of siblings.
 - `inputs/recording_metadata.csv`: for each electrophysiology recording, this table has the hemisphere and brain region
 - `inputs/all_units.tbl`: a list of single units included in the analysis, one per line. Each name refers to two neurobank resources, one with the spike response data (in pprox format) and one with the spike waveforms (in hdf5 format).
 - `inputs/behavior_data.tbl`: a table of behavioral datasets to retrieve from decide-host
+
+## Datasets
+
+- amplitude and texture statistics for colony and pair-reared birds
+- behavior trial data
+- neural data
+
 
 ## Behavior
 
