@@ -32,7 +32,7 @@ from scipy import signal
 import libtfr
 
 from core import setup_log
-from filters import A_weighting
+from filters import AWeightTransform, SpectrogramTransform
 
 # disable locking - neurobank archive is probably on an NFS share
 os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
@@ -128,73 +128,6 @@ class SegmentIterator:
 
     def __iter__(self):
         return iter(self.segments)
-
-
-class AWeightTransform:
-    def __init__(self, sampling_rate: float):
-        self.sos = A_weighting(sampling_rate, "sos")
-
-    def transform(self, data):
-        return signal.sosfilt(self.sos, data)
-
-
-class SpectrogramTransform:
-    """Transforms a time series into a spectrogram using a hanning window."""
-
-    def __init__(self, window_size: float, sampling_rate: float, max_frequency: float):
-        self.step_size = window_size / 2
-        self.sampling_rate = sampling_rate
-        self.nfft = int(window_size * sampling_rate)
-        self.freq_res = sampling_rate / self.nfft
-        self.nstep = int(self.step_size * sampling_rate)
-        window = np.hanning(self.nfft)
-        self.scale1 = window.sum() ** 2
-        self.scale2 = sampling_rate * (window**2).sum()
-        self.enbw = sampling_rate * self.scale2 / self.scale1
-        self.mfft = libtfr.mfft_precalc(self.nfft, window)
-        self.freq, self.fidx = libtfr.fgrid(
-            self.sampling_rate, self.nfft, (0, max_frequency)
-        )
-
-    def transform(self, data, scaling: str = "density"):
-        spec = self.mfft.mtspec(data, self.nstep)[self.fidx]
-        if scaling == "density":
-            spec /= self.scale2
-        elif scaling == "spectrum":
-            spec /= self.scale1
-        return spec
-
-    def tgrid(self, spec):
-        return libtfr.tgrid(spec, self.sampling_rate, self.nstep)
-
-
-class MPSTransform:
-    def __init__(self, segment_size: float, spec_shift: float, max_frequency: float):
-        self.spec_shift = spec_shift
-        self.segment_nframes = int(segment_size / spec_shift)
-        # preallocate the fft for MPS calculation, because all segments will have
-        # the same number of frames regardless of sampling rate.
-        mps_window = np.hanning(self.segment_nframes)
-        self.scale = mps_window.sum() ** 2
-        log.info(
-            "Allocating %d-point FFT transform for modulation power spectrum",
-            self.segment_nframes,
-        )
-        self.mfft = libtfr.mfft_precalc(self.segment_nframes, mps_window)
-        self.freq, self.fidx = libtfr.fgrid(
-            1 / self.spec_shift, self.segment_nframes, (0, max_frequency)
-        )
-        self.tgrid = np.arange(
-            0, self.segment_nframes * self.spec_shift, self.spec_shift
-        )
-
-    def transform(self, data):
-        spec = self.mfft.mtpsd(data) / self.scale
-        return spec[self.fidx]
-
-    @property
-    def size(self):
-        return self.fidx.size
 
 
 def get_calibration(segment: Segment, window_size: float) -> float:

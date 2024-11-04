@@ -31,27 +31,7 @@ If you're starting from a fresh repository, see `docs/installation.md` for instr
 
 ### Acoustical environment statistics
 
-The amplitude statistics for the colony and pair settings are in the `zebf-social-acoustical-stats` dataset as CSV files. The texture statistics (McDermott and Simoncelli 2011) need to be calculated from the sample wave files.
-
-For the colony:
-
-``` shell
-venv/bin/python scripts/textures-stats.py --output build/cr-family_texture-stats.h5 datasets/zebf-social-acoustical-stats/cobalt_57_family*wav
-```
-
-And for the clean songs:
-
-``` shell
-venv/bin/python scripts/texture-stats.py --output build/clean-songs_texture-stats.h5 datasets/zebf-social-acoustical-stats/*songs*wav
-```
-
-Pink noise is used as a comparison for some plots. We use the same sample from the McDermott source distribution:
-
-``` shell
-venv/bin/python scripts/texture-stats.py --duration 20 --output build/pink-noise_texture-stats.h5 datasets/zebf-social-acoustical-stats/pink_noise_20s_20kHz.wav
-```
-
-The panels for Figure 1 can be generated using the `notebooks/acoustical-stats.ipynb` Jupyter notebook.
+The amplitude statistics for the colony and pair settings are in the `zebf-social-acoustical-stats` dataset as CSV files. The texture statistics (McDermott and Simoncelli 2011) need to be calculated from the sample wave files. There are instructions in the `notebooks/acoustical-stats.ipynb` Jupyter notebook.
 
 ## Behavior
 

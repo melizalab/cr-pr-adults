@@ -8,7 +8,8 @@ from enum import Enum
 from typing import Tuple
 
 import numpy as np
-from scipy.signal import bilinear_zpk, zpk2tf, zpk2sos, freqs
+from scipy.signal import bilinear_zpk, zpk2tf, zpk2sos, freqs, sosfilt
+import libtfr
 
 
 Weighting = Enum("Weighting", ["A", "B", "C"])
@@ -95,3 +96,41 @@ def A_weighting(fs: float, output="ba"):
         return zpk2sos(z_d, p_d, k_d)
     else:
         raise ValueError("'%s' is not a valid output form." % output)
+
+
+class AWeightTransform:
+    def __init__(self, sampling_rate: float):
+        self.sos = A_weighting(sampling_rate, "sos")
+
+    def transform(self, data):
+        return sosfilt(self.sos, data)
+
+
+class SpectrogramTransform:
+    """Transforms a time series into a spectrogram using a hanning window."""
+
+    def __init__(self, window_size: float, sampling_rate: float, max_frequency: float):
+        self.step_size = window_size / 2
+        self.sampling_rate = sampling_rate
+        self.nfft = int(window_size * sampling_rate)
+        self.freq_res = sampling_rate / self.nfft
+        self.nstep = int(self.step_size * sampling_rate)
+        window = np.hanning(self.nfft)
+        self.scale1 = window.sum() ** 2
+        self.scale2 = sampling_rate * (window**2).sum()
+        self.enbw = sampling_rate * self.scale2 / self.scale1
+        self.mfft = libtfr.mfft_precalc(self.nfft, window)
+        self.freq, self.fidx = libtfr.fgrid(
+            self.sampling_rate, self.nfft, (0, max_frequency)
+        )
+
+    def transform(self, data, scaling: str = "density"):
+        spec = self.mfft.mtspec(data, self.nstep)[self.fidx]
+        if scaling == "density":
+            spec /= self.scale2
+        elif scaling == "spectrum":
+            spec /= self.scale1
+        return spec
+
+    def tgrid(self, spec):
+        return libtfr.tgrid(spec, self.sampling_rate, self.nstep)
