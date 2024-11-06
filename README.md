@@ -31,14 +31,13 @@ If you're starting from a fresh repository, see `docs/installation.md` for instr
 
 ### Acoustical environment statistics
 
-The amplitude statistics for the colony and pair settings are in the `zebf-social-acoustical-stats` dataset as CSV files. The texture statistics (McDermott and Simoncelli 2011) need to be calculated from the sample wave files. There are instructions in the `notebooks/acoustical-stats.ipynb` Jupyter notebook.
+The amplitude statistics for the colony and pair settings are in the `zebf-social-acoustical-stats` dataset as CSV files. The texture statistics (McDermott and Simoncelli 2011) need to be calculated from the sample wave files. There are instructions in the `notebooks/figure1_acoustical-stats.ipynb` Jupyter notebook.
 
 ## Behavior
 
-Preprocessing:
+The behavior trial data are in the `zebf-discrim-noise` dataset as CSV files. They were retrieved from our internal trial data on 2024-10-12 using the command `batch/retrieve_trials.sh < inputs/behavior_data.tbl`. The `retrieve_trials` script is retained in this code repository for reference but will not work from outside our internal network.
 
-1. Run `batch/retrieve_trials.sh < inputs/behavior_data.tbl` to retrieve trials for all of the included subjects. Saves the output to `build/*_trials.csv` files, one for each line in `inputs/behavior_data.tbl`
-2. Run `batch/ssm-pretraining.sh` to fit state-space models to the behavioral data. This can also be run on rivanna using `batch/ssm-pretraining.slurm`.
+The training data for an example bird is analyzed using a state space model. This model is fit using a separate script, `scripts/ssm-training.R`. Instructions for how to fit the model and code to generate the panels in Figure 2 are in the `notebooks/figure2_behavior-stats.ipynb` notebook.
 
 Analysis and figure generation are run in Jupyter notebooks. See `docs/installation.md` for instructions about setting this up.
 

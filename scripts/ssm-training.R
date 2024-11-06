@@ -20,9 +20,7 @@ if (length(args) == 0) {
 }
 dataset <- args[1]
 
-header <- data.table::fread(cmd=str_c("ls build/", dataset, "*_trials.csv | head -n1 | xargs head -n1"), header=T)
-all_trials <- tibble(data.table::fread(cmd=str_c("ls build/", dataset, "*_trials.csv | xargs tail -q -n+2"), header=F))
-names(all_trials) <- names(header)
+all_trials <- tibble(data.table::fread(dataset, header=T))
 
 ## load data. The trials are numbered before doing any exclusions so state can be back-referenced accordingly
 trials <- (
@@ -53,10 +51,6 @@ cat("- Included", nrow(valid_trials), "valid trials\n")
 cat("- Sampling posterior for p(nopeck)\n")
 noresp_model <- bsm_ng(valid_trials$noresp, sd_level=halfnormal(0.1, 1), distribution="binomial", u=1)
 noresp_samples <- run_mcmc(noresp_model, iter = n_iter, particles = 10)
-
-## cat("- Sampling posterior for p(correct) with missing data\n")
-## corr_model <- bsm_ng(valid_trials$correct, sd_level=halfnormal(0.1, 1), distribution="binomial", u=1, P1=0.01)
-## corr_samples <- run_mcmc(corr_model, iter = n_iter, particles = 10)
 
 cat("- Sampling posterior for p(left|stim) with missing data\n")
 Z <- model.matrix(~ stim_left, valid_trials) 
@@ -96,14 +90,6 @@ summary_noresp <- (
     |> inner_join(trial_lookup, by="time")
 )    
 
-## cat("- Computing summary statistics for p(correct)\n")
-## corr_samples$alpha <- invlogit(corr_samples$alpha)
-## summary_corr <- (
-##     summary(corr_samples, variable="states", probs=c(0.05, 0.95))
-##     |> rename(mean=Mean, lwr="5%", upr="95%")
-##     |> inner_join(trial_lookup, by="time")
-## )
-
 cat("- Computing summary statistics for p(peck|stim)\n")
 summary_discrim <- (
     summary(resp_samples, variable="states", probs=c(0.05, 0.95))
@@ -120,7 +106,8 @@ summary_peck <- (
     |> inner_join(trial_lookup, by="time")
 )
 
+dataset_name <- tools::file_path_sans_ext(dataset) |> basename()
 saveRDS(list(data=valid_trials, noresp=summary_noresp, discrim=summary_discrim, peck=summary_peck),
-        file=str_c("build/", dataset, "_ssm_summary.rds"))
+        file=str_c("build/", dataset_name, "_ssm_summary.rds"))
 
 
