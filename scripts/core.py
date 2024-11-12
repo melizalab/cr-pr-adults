@@ -1,5 +1,6 @@
 # -*- mode: python -*-
 """ Core functions for processing responses and stimuli """
+import json
 import logging
 from typing import Callable, Dict, TypedDict, Union
 from pathlib import Path
@@ -157,15 +158,24 @@ class MotifBackgroundSplitter(MotifSplitter):
 
 
 def split_trials(
-    splitter: Callable[[str, Dict], pd.DataFrame], trials: pprox.Collection
+    splitter: Callable[[str, Dict], pd.DataFrame],
+    trials: pprox.Collection,
+    metadata_dir: Path,
 ) -> pd.DataFrame:
     """For each trial, split into motifs using splitter"""
     # this is basically a wrapper around pprox.split_trial that caches
-    stim_names = [trial["stimulus"]["name"] for trial in trials["pprox"]]
-    stim_info = {
-        result["name"]: result["metadata"]
-        for result in nbank.describe_many(nbank.default_registry, *stim_names)
-    }
+    stim_info = {}
+    # stim_names = [trial["stimulus"]["name"] for trial in trials["pprox"]]
+    # for result in nbank.describe_many(nbank.default_registry, *stim_names):
+    #     stim_info[result["name"]] = result["metadata"]
+    #     output_file = (metadata_dir / result["name"]).with_suffix(".json")
+    #     with open(output_file, "wt") as fp:
+    #         json.dump(result["metadata"], fp)
+    for trial in trials["pprox"]:
+        stim_name = trial["stimulus"]["name"]
+        metadata_file = (metadata_dir / stim_name).with_suffix(".json")
+        with open(metadata_file, "rt") as fp:
+            stim_info[stim_name] = json.load(fp)
 
     def wrapper(resource_id):
         return splitter(resource_id, stim_info)

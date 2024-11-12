@@ -8,7 +8,6 @@ from pathlib import Path
 
 import pandas as pd
 from core import MotifBackgroundSplitter, split_trials
-from dlab import nbank
 
 clean_dBFS = -100
 
@@ -24,20 +23,27 @@ def main(argv=None):
         "--output-dir",
         "-o",
         type=Path,
-        help="the directory to store output files (default %(default)s)",
+        help="the directory to store output file (if not set, outputs to standard out)",
     )
-    parser.add_argument("unit", help="name of the unit to analyze")
+    parser.add_argument(
+        "--metadata-dir",
+        "-m",
+        type=Path,
+        required=True,
+        help="the directory where stimulus metadata files are stored",
+    )
+    parser.add_argument("unit", type=Path, help="pprox data (one unit) to analyze")
     args = parser.parse_args(argv)
     logging.basicConfig(
         format="%(message)s", level=logging.DEBUG if args.debug else logging.INFO
     )
 
-    pprox_file = nbank.find_resource(args.unit)
+    pprox_file = args.unit
     logging.info("- reading spikes from %s", pprox_file)
     unit = json.loads(pprox_file.read_text())
     logging.info("- splitting trials by motif")
     motifs = (
-        split_trials(MotifBackgroundSplitter(), unit)
+        split_trials(MotifBackgroundSplitter(), unit, args.metadata_dir)
         .reset_index()
         .rename(columns=lambda s: s.replace("-", "_"))
         .set_index(["background_dBFS", "source_trial", "foreground"])
@@ -68,14 +74,16 @@ def main(argv=None):
         cols_to_keep
     ]
     if args.output_dir is not None:
-        outfile = args.output_dir / f"{args.unit}_rates.csv"
-        data.insert(0, "unit", args.unit)
+        unit_name = args.unit.stem
+        outfile = args.output_dir / f"{unit_name}_rates.csv"
+        data.insert(0, "unit", unit_name)
         logging.info("- wrote csv to %s", outfile)
     else:
         outfile = sys.stdout
     data.to_csv(outfile, index=False)
 
-    # fit a GLM to the counts to estimate significance - needs some tweaking
+    # fit a GLM to the counts to estimate significance - not used because we
+    # can't calculate marginal means
     # pooled = (
     #     data.query("foreground == 'silence' | background_dBFS==-100")
     #     .query("foreground != 'background'")

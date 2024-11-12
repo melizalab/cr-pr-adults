@@ -16,7 +16,6 @@ from core import (
     split_trials,
     trial_to_spike_train,
 )
-from dlab import nbank
 from sklearn.model_selection import LeaveOneOut, cross_val_score
 from sklearn.neighbors import KNeighborsClassifier
 
@@ -86,7 +85,14 @@ def main(argv=None):
         type=Path,
         help="the directory to store output files (if not set, prints to stdout)",
     )
-    parser.add_argument("unit", help="name of the unit to analyze")
+    parser.add_argument(
+        "--metadata-dir",
+        "-m",
+        type=Path,
+        required=True,
+        help="the directory where stimulus metadata files are stored",
+    )
+    parser.add_argument("unit", type=Path, help="pprox data (one unit) to analyze")
     args = parser.parse_args(argv)
     logging.basicConfig(
         format="%(message)s", level=logging.DEBUG if args.debug else logging.INFO
@@ -99,12 +105,12 @@ def main(argv=None):
     )
     logging.info("- excluding these motifs: %s", ", ".join(stimuli_to_drop))
 
-    pprox_file = nbank.find_resource(args.unit)
+    pprox_file = args.unit
     logging.info("- reading spikes from %s", pprox_file)
     unit = json.loads(pprox_file.read_text())
     logging.info("- splitting trials by motif")
     splitter = MotifSplitter()
-    motifs = split_trials(splitter, unit)
+    motifs = split_trials(splitter, unit, args.metadata_dir)
 
     logging.info(
         "- computing classifier performance using pairwise spike train distances"
@@ -177,8 +183,9 @@ def main(argv=None):
     results = spike_trains.loc[clean_dBFS].pipe(bootstrap_classifier).reset_index()
 
     if args.output_dir is not None:
-        results.insert(0, "unit", args.unit)
-        out_path = args.output_dir / f"{args.unit}_motif_discrim.csv"
+        unit_name = args.unit.stem
+        out_path = args.output_dir / f"{unit_name}_rates.csv"
+        results.insert(0, "unit", unit_name)
         logging.info(" - wrote results to %s", out_path)
     else:
         out_path = sys.stdout
