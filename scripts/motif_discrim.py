@@ -179,7 +179,7 @@ def main(argv=None):
             .rename_axis(index="foreground")
         )
 
-    # for this study we only care about the responses in the 'clean' condition
+    # for this study we only use the responses in the 'clean' condition
     results = spike_trains.loc[clean_dBFS].pipe(bootstrap_classifier).reset_index()
 
     if args.output_dir is not None:
