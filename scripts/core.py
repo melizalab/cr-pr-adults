@@ -2,8 +2,8 @@
 """ Core functions for processing responses and stimuli """
 import json
 import logging
-from typing import Callable, Dict, TypedDict, Union
 from pathlib import Path
+from typing import Callable, Dict, TypedDict, Union
 
 import ewave
 import numpy as np
@@ -74,7 +74,7 @@ def truncate(song: Waveform, duration: Union[int, float]) -> None:
     if isinstance(duration, float):
         duration = int(duration * song["sampling_rate"])
     if song["signal"].size < duration:
-        raise ValueError(f"signal is too short to be truncated to desired length")
+        raise ValueError("signal is too short to be truncated to desired length")
     data = song["signal"][:duration]
     song.update(signal=data, duration=duration / song["sampling_rate"], dBFS=dBFS(data))
 
@@ -174,7 +174,7 @@ def split_trials(
     for trial in trials["pprox"]:
         stim_name = trial["stimulus"]["name"]
         metadata_file = (metadata_dir / stim_name).with_suffix(".json")
-        with open(metadata_file, "rt") as fp:
+        with open(metadata_file) as fp:
             stim_info[stim_name] = json.load(fp)
 
     def wrapper(resource_id):

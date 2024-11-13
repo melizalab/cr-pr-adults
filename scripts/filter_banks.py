@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # -*- mode: python -*-
 """Functions for creating filter banks to be used in the frequency domain
 

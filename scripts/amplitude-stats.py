@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # -*- mode: python -*-
 """Divides a long recording into segments and calculates RMS amplitude and spectral
 entropy in each segment.
@@ -16,23 +15,22 @@ of the amplitude envelopes in each segment. These are output to a raw binary
 file as an double-precision array with dimensions n_mod_freqs by n_segments.
 
 """
-import os
 import argparse
+import csv
 import datetime
 import logging
-import csv
+import os
 from pathlib import Path
-from typing import NamedTuple, Optional
+from typing import NamedTuple
 
 import arf
 import h5py
-from tqdm import tqdm
-import numpy as np
-from scipy import signal
 import libtfr
-
+import numpy as np
 from core import setup_log
 from filters import AWeightTransform, SpectrogramTransform
+from scipy import signal
+from tqdm import tqdm
 
 # disable locking - neurobank archive is probably on an NFS share
 os.environ["HDF5_USE_FILE_LOCKING"] = "FALSE"
@@ -63,12 +61,11 @@ class SegmentIterator:
 
     """
 
-    sampling_rate = None
-    calibration_segment = None
-    segments = []
-
     def __init__(self, files, segment_size: float):
         segment_shift = segment_size / 2
+        self.sampling_rate = None
+        self.calibration_segment = None
+        self.segments = []
         for file in files:
             handle = h5py.File(file, "r")
             # the calibration recording should be the first one; if there are
@@ -106,7 +103,9 @@ class SegmentIterator:
                     nsamples = int(segment_size * self.sampling_rate)
                     nshift = int(segment_shift * self.sampling_rate)
                     i = 0
-                    for i, segment_end in enumerate(range(nsamples, dset.size, nshift)):
+                    for _i, segment_end in enumerate(
+                        range(nsamples, dset.size, nshift)
+                    ):
                         segment_start = segment_end - nsamples
                         self.segments.append(
                             Segment(
@@ -138,7 +137,7 @@ def get_calibration(segment: Segment, window_size: float) -> float:
     )
     sampling_rate = segment.dataset.attrs["sampling_rate"]
     nfft = int(window_size * sampling_rate)
-    df = sampling_rate / nfft
+    _df = sampling_rate / nfft
     step_size = window_size * 0.782
     nstep = int(step_size * sampling_rate)
     # flattop windows are better for estimating amplitude of sinusoids
@@ -216,11 +215,11 @@ if __name__ == "__main__":
     a_weighter = AWeightTransform(segments.sampling_rate)
 
     log.info("- acoustical statistics -> %s", args.output)
-    fieldnames = ["entry", "date", "time", "ampl_avg"] + amplitude_quantile_names
+    fieldnames = ["entry", "date", "time", "ampl_avg", *amplitude_quantile_names]
     with open(args.output, "w") as csv_fp:
         writer = csv.DictWriter(csv_fp, fieldnames=fieldnames)
         writer.writeheader()
-        for i, segment in enumerate(tqdm(segments)):
+        for _i, segment in enumerate(tqdm(segments)):
             # NB segments can vary in length
             data = (
                 segment.dataset[segment.start_sample : segment.end_sample]

@@ -5,8 +5,6 @@ import json
 import logging
 from pathlib import Path
 
-from dlab import nbank
-
 
 def main(argv=None):
     import argparse

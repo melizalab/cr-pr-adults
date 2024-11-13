@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # -*- mode: python -*-
 """Functions to perform filtering in the time domain
 
@@ -7,10 +6,9 @@ This code is mostly from https://github.com/endolith/waveform_analysis
 from enum import Enum
 from typing import Tuple
 
-import numpy as np
-from scipy.signal import bilinear_zpk, zpk2tf, zpk2sos, freqs, sosfilt
 import libtfr
-
+import numpy as np
+from scipy.signal import bilinear_zpk, freqs, sosfilt, zpk2sos, zpk2tf
 
 Weighting = Enum("Weighting", ["A", "B", "C"])
 
@@ -95,7 +93,7 @@ def A_weighting(fs: float, output="ba"):
     elif output == "sos":
         return zpk2sos(z_d, p_d, k_d)
     else:
-        raise ValueError("'%s' is not a valid output form." % output)
+        raise ValueError(f"'{output}' is not a valid output form.")
 
 
 class AWeightTransform:

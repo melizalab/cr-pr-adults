@@ -29,7 +29,7 @@ def summarize_stim(df):
             for i in range(1, n_trials)
         ]
     return pd.Series(
-        list(avgs) + [noise_corr, np.mean(shift_corr)],
+        [*avgs, noise_corr, np.mean(shift_corr)],
         index=["avg_1", "avg_2", "noise", "shifted"],
     )
 
@@ -86,17 +86,7 @@ def main(argv=None):
             else:
                 signal_corr = by_stim.avg_1.corr(by_stim.avg_2)
             print(
-                "{},{},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f},{:.4f}".format(
-                    pair[0],
-                    pair[1],
-                    signal_corr,
-                    evoked.noise.mean(),
-                    evoked.shifted.mean(),
-                    (by_stim.noise - by_stim.shifted).mean(),
-                    spont.noise,
-                    spont.shifted,
-                    spont.noise - spont.shifted,
-                ),
+                f"{pair[0]},{pair[1]},{signal_corr:.4f},{evoked.noise.mean():.4f},{evoked.shifted.mean():.4f},{(by_stim.noise - by_stim.shifted).mean():.4f},{spont.noise:.4f},{spont.shifted:.4f},{spont.noise - spont.shifted:.4f}",
                 file=fp,
             )
 

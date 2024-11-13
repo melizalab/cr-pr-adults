@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # -*- mode: python -*-
 """Computes sound texture statistics from acoustic recordings.
 
@@ -9,20 +8,16 @@ samples, one entry per sample.
 
 """
 
-import os
-import csv
-import datetime
 import argparse
+import datetime
 import logging
 from pathlib import Path
 
 import arf
-import numpy as np
-from scipy import signal
-import h5py
-
-import filter_banks as fbs
 import core
+import filter_banks as fbs
+import h5py
+import numpy as np
 
 log = logging.getLogger()  # root logger
 __version__ = "20241101-1"
