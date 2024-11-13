@@ -64,17 +64,10 @@ Finally, extract the source channels from the pprox files by running `scripts/ex
 
 Individual decoder models can be fit using `scripts/decoder.py`. For example, `venv/bin/python scripts/decoder.py -o build build/cr_units.txt` will load the data for all the CR units, compute average firing rates and delay-embed them, use cross-validation to determine the optimal ridge regression penalty hyperparameter, and then do train/test splits for each motif to compute predictions from the responses to clean and noise-embedded stimuli.
 
-The full analysis (Figure 6C) requires doing this multiple times for subsamples CR and PR populations, so it should be run on an HPC cluster (see `docs/rivanna.md` for how we do this at UVA)
+The full analysis (Figures 7 and 8) requires doing this multiple times for subsamples of the CR and PR populations, so it should be run on an HPC cluster (see `docs/rivanna.md` for how we do this at UVA)
 
 1. The first step is to generate a table of jobs to run. `venv/bin/python scripts/make_decoder_tasks.py > inputs/decoder_tasks.txt` will read in `build/cr_units.txt` and `build/pr_units.txt` and make this table, with 100 replicates for 15 different ensemble sizes.
 2. On your HPC cluster, run `sbatch batch/decoder.slurm`
 3. Collate the CSV outputs into a single file: `awk 'FNR==1 && NR!=1{next;}{print}' build/*_model.csv  > build/decoder_predictions.csv`
-4. `notebooks/decoder-summary.ipynb` generates 
-
-
-### Optional/Deprecated
-
-4. (optional) `batch/plot_rasters.sh < inputs/all_units.tbl` to generate inspection plots for all units
-3. `batch/extract_recording_channel.sh > build/unit_channels.csv` to extract the primary electrode channel for each unit
-5. `batch/motif_distances.sh < inputs/all_units.tbl` to measure how well responses of single units to different motifs can be discriminated using a spike-distance metric
-6. `batch/sequence_distances.sh < inputs/all_units.tbl` to measure how consistently neurons respond to sequences of motifs in the presence of noise
+4. `notebooks/figure7-8_decoder-example.ipynb` generates example panels for the decoder analysis
+4. `notebooks/figure7-8_decoder-summary.ipynb` generates panels of the summary statistics for the decoder
