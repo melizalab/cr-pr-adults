@@ -5,14 +5,18 @@ experiences during childhood influences auditory processing and perception in
 adulthood.
 
 This file describes the key steps in running the analysis, including links to
-data files hosted on public repositories.. See the `docs` folder for information
-about installing dependencies, using Rivanna, and other topics.
+data files hosted on public repositories. See the `docs` folder for information
+about installing dependencies, using Rivanna, and other topics. The instructions
+should work on Linux or any other POSIX-compatible operating system. Windows
+users will need to port batch scripts.
 
 ## Datasets
 
 - zebf-social-acoustical-stats: amplitude and texture statistics for colony and pair-reared birds
 - zebf-discrim-noise: behavior trial data
 - zebf-social-acoustical-ephys: neural data
+
+To download, verify, and unpack the datasets, run `batch/fetch_datasets.sh`. 
 
 ## Analysis
 

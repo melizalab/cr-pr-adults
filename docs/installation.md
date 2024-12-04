@@ -30,7 +30,7 @@ venv/bin/python -m ipykernel install --user --name=cr-pr-adults  # only do this 
 Some of the analysis/plotting notebooks use R instead of Python. Run the following commands in R to register a kernel with Jupyter and to install dependencies. This only needs to be done once per user.
 
 ``` R
-install.packages(c('tidyverse', 'lme4', 'emmeans', 'ggplot2'))   # direct code dependencies
+install.packages(c('tidyverse', 'lme4', 'emmeans', 'ggplot2', 'bssm'))   # direct code dependencies
 install.packages(c('repr', 'IRdisplay', 'IRkernel'))             # for the R notebooks
 IRkernel::installspec(name = 'ir43', displayname = 'R 4.3')
 

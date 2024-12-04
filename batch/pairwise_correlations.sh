@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 OUTDIR="build/"
-PYTHON=venv/bin/python3
+: ${PYTHON:=venv/bin/python3}
 
 if [[ -t 0 ]]; then
     echo "usage: batch/pairwise_correlations.sh < table_of_recordings"

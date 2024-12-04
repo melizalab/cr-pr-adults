@@ -16,17 +16,30 @@ ijob -c 2 -A melizalab -p standard --time 1:00:00
 Activate the required modules and install the dependencies using anaconda and pip:
 
 ``` shell
-module load anaconda/2023.07-py3.11
-conda create --name cr-pr-adults python=3.11 scikit-learn-intelex pandas
-conda activate cr-pr-adults
-python -m pip install -e .
+module load miniforge/24.3.0-py3.11 parallel/20200322
+mamba create --name cr-pr-adults python=3.11 scikit-learn-intelex pandas
+source activate cr-pr-adults
+python -m pip install -r requirements.txt
 ```
 
-Test that the script works:
+To test that everything works before firing up a big batch, run a job in the interactive session. For example:
 
 ``` shell
-python scripts/motif_discrim.py -o temp C42_3_1_c156
+python scripts/motif_rates.py -o build -m datasets/zebf-social-acoustical-ephys/metadata -o build datasets/zebf-social-acoustical-ephys/responses/C294_1_1_c14.pprox
 ```
+
+### Batch: general
+
+You should be able to run any of the batch scripts within your interactive session as long
+as you point them to the right python interpreter. Start a new session with a bunch of cores, then run the following commands before invoking the batch scripts.
+
+``` shell
+module load miniforge/24.3.0-py3.11 parallel/20200322
+source activate cr-pr-adults
+export PYTHON=$(which python)
+```
+
+If you need to start a new session, just load the miniforge module and activate your conda environment.
 
 ### Batch: Motif discrimination
 
@@ -44,6 +57,10 @@ Copy the list of failed jobs and rerun them as follows with a 2-hour limit:
 sbatch --array <list-of-jobs> -t 2:00:00 batch/motif_discrim.slurm
 ```
 
-### Batch: Behavioral state space model
+### R scripts
 
-Run `sbatch batch/ssm-pretraining.slurm` to analyze each subject's behavioral data.
+For R scripts, you'll use an interactive session, but you need to load the R module rather than Python. See `installation.md` for instructions about installing R dependencies.
+
+``` shell
+module load gcc/11.4.0 openmpi/4.1.4 R/4.3.1
+```

@@ -8,7 +8,7 @@
 #SBATCH -p standard
 #SBATCH -A melizalab
 set -e
-module load anaconda/2023.07-py3.11
+module load miniforge/24.3.0-py3.11
 source activate cr-pr-adults
 PYTHON=${HOME}/.conda/envs/cr-pr-adults/bin/python3
 

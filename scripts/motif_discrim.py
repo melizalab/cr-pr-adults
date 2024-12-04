@@ -184,7 +184,7 @@ def main(argv=None):
 
     if args.output_dir is not None:
         unit_name = args.unit.stem
-        out_path = args.output_dir / f"{unit_name}_rates.csv"
+        out_path = args.output_dir / f"{unit_name}_motif_discrim.csv"
         results.insert(0, "unit", unit_name)
         logging.info(" - wrote results to %s", out_path)
     else:
