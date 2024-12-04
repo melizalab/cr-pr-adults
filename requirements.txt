@@ -4,58 +4,61 @@
 #
 #    pip-compile
 #
-anyio==3.7.1
-    # via httpcore
+anyio==4.6.2.post1
+    # via httpx
 appdirs==1.4.4
     # via melizalab-tools
-arf==2.6.4
+arf==2.6.7
     # via melizalab-tools
-certifi==2023.7.22
+certifi==2024.8.30
     # via
     #   httpcore
     #   httpx
-contourpy==1.1.0
+cffi==1.17.1
+    # via samplerate
+contourpy==1.3.1
     # via matplotlib
-cycler==0.11.0
+cycler==0.12.1
     # via matplotlib
-ewave==1.0.7
-    # via
-    #   melizalab-tools
-    #   noise-invariant-analysis (pyproject.toml)
-fonttools==4.41.1
+decide-analysis==2.2.0
+    # via cr-pr-adults (pyproject.toml)
+ewave==1.0.9
+    # via melizalab-tools
+fonttools==4.55.1
     # via matplotlib
 h11==0.14.0
     # via httpcore
-h5py==3.9.0
+h5py==3.12.1
     # via arf
-httpcore==0.17.3
+httpcore==1.0.7
     # via httpx
-httpx==0.24.1
-    # via neurobank
-idna==3.4
+httpx==0.28.0
+    # via
+    #   decide-analysis
+    #   neurobank
+idna==3.10
     # via
     #   anyio
     #   httpx
-joblib==1.3.1
+joblib==1.4.2
     # via scikit-learn
-kiwisolver==1.4.4
+kiwisolver==1.4.7
     # via matplotlib
-libtfr==2.1.7
+libtfr==2.1.9
+    # via melizalab-tools
+matplotlib==3.9.3
     # via
-    #   melizalab-tools
-    #   noise-invariant-analysis (pyproject.toml)
-matplotlib==3.7.2
-    # via
-    #   noise-invariant-analysis (pyproject.toml)
+    #   cr-pr-adults (pyproject.toml)
     #   seaborn
 melizalab-gammatone==0.1.1
-    # via noise-invariant-analysis (pyproject.toml)
+    # via cr-pr-adults (pyproject.toml)
 melizalab-tools==2023.9.7
-    # via noise-invariant-analysis (pyproject.toml)
-neurobank==0.10.8
+    # via cr-pr-adults (pyproject.toml)
+neurobank==0.10.9
     # via melizalab-tools
-numpy==1.25.1
+numpy==1.26.4
     # via
+    #   arf
     #   contourpy
     #   ewave
     #   h5py
@@ -63,52 +66,65 @@ numpy==1.25.1
     #   matplotlib
     #   melizalab-gammatone
     #   pandas
+    #   patsy
     #   pyspike
     #   quickspikes
+    #   samplerate
     #   scikit-learn
     #   scipy
     #   seaborn
+    #   statsmodels
     #   toelis
-packaging==23.1
-    # via matplotlib
-pandas==2.0.3
+packaging==24.2
+    # via
+    #   arf
+    #   matplotlib
+    #   statsmodels
+pandas==2.2.3
     # via
     #   melizalab-tools
     #   seaborn
-pillow==10.0.0
+    #   statsmodels
+patsy==1.0.1
+    # via statsmodels
+pillow==11.0.0
     # via matplotlib
-pyparsing==3.0.9
+pycparser==2.22
+    # via cffi
+pyparsing==3.2.0
     # via matplotlib
 pyspike @ git+https://github.com/melizalab/PySpike.git@5a3edeb77dbd626b41fca6f1cc9bee3041ce8a80
-    # via noise-invariant-analysis (pyproject.toml)
-python-dateutil==2.8.2
+    # via cr-pr-adults (pyproject.toml)
+python-dateutil==2.9.0.post0
     # via
     #   matplotlib
     #   pandas
-pytz==2023.3
+pytz==2024.2
     # via pandas
-quickspikes==2.0.1
-    # via
-    #   melizalab-tools
-    #   noise-invariant-analysis (pyproject.toml)
-scikit-learn==1.3.1
-    # via noise-invariant-analysis (pyproject.toml)
-scipy==1.11.1
+quickspikes==2.0.5
+    # via melizalab-tools
+samplerate==0.1.0
+    # via cr-pr-adults (pyproject.toml)
+scikit-learn==1.5.2
+    # via cr-pr-adults (pyproject.toml)
+scipy==1.14.1
     # via
     #   melizalab-gammatone
     #   scikit-learn
+    #   statsmodels
 seaborn==0.12.2
-    # via noise-invariant-analysis (pyproject.toml)
-six==1.16.0
+    # via cr-pr-adults (pyproject.toml)
+six==1.17.0
     # via python-dateutil
-sniffio==1.3.0
-    # via
-    #   anyio
-    #   httpcore
-    #   httpx
-threadpoolctl==3.2.0
+sniffio==1.3.1
+    # via anyio
+statsmodels==0.14.4
+    # via cr-pr-adults (pyproject.toml)
+threadpoolctl==3.5.0
     # via scikit-learn
-toelis==2.1.1
+toelis==2.1.4
     # via melizalab-tools
-tzdata==2023.3
+tqdm==4.66.6
+    # via cr-pr-adults (pyproject.toml)
+tzdata==2024.2
     # via pandas
