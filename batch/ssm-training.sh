@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 OUTDIR="build"
 INPUTS="inputs/behavior_data.tbl"

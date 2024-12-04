@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 OUTDIR="build/"
 PYTHON=venv/bin/python3
