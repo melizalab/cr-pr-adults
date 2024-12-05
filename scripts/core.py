@@ -9,7 +9,7 @@ import ewave
 import numpy as np
 import pandas as pd
 import pyspike
-from dlab import nbank, pprox
+from dlab import pprox
 
 
 def setup_log(log, debug=False):
@@ -30,18 +30,14 @@ class Waveform(TypedDict):
     dBFS: float
 
 
-def load_wave(file: Union[str, Path]) -> Waveform:
-    if isinstance(file, Path):
-        path = file
-    else:
-        path = nbank.find_resource(file)
+def load_wave(path: Union[str, Path]) -> Waveform:
     with ewave.open(path, "r") as fp:
         if fp.nchannels != 1:
             raise ValueError(f"{file} has more than one channel")
         data = ewave.rescale(fp.read(), "float32")
         ampl = dBFS(data)
         return Waveform(
-            name=file,
+            name=path.stem,
             signal=data,
             sampling_rate=fp.sampling_rate,
             duration=fp.nframes / fp.sampling_rate,
@@ -165,12 +161,6 @@ def split_trials(
     """For each trial, split into motifs using splitter"""
     # this is basically a wrapper around pprox.split_trial that caches
     stim_info = {}
-    # stim_names = [trial["stimulus"]["name"] for trial in trials["pprox"]]
-    # for result in nbank.describe_many(nbank.default_registry, *stim_names):
-    #     stim_info[result["name"]] = result["metadata"]
-    #     output_file = (metadata_dir / result["name"]).with_suffix(".json")
-    #     with open(output_file, "wt") as fp:
-    #         json.dump(result["metadata"], fp)
     for trial in trials["pprox"]:
         stim_name = trial["stimulus"]["name"]
         metadata_file = (metadata_dir / stim_name).with_suffix(".json")
