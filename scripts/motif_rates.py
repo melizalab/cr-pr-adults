@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 import pandas as pd
-from core import MotifBackgroundSplitter, split_trials, find_resource
+from core import MotifBackgroundSplitter, find_resource, split_trials
 
 clean_dBFS = -100
 

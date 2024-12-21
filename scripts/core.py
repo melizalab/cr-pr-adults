@@ -4,7 +4,7 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Callable, Dict, TypedDict, Union, Optional
+from typing import Callable, Dict, Optional, TypedDict, Union
 
 import ewave
 import numpy as np
@@ -20,7 +20,7 @@ except KeyError:
     default_registry = None
 finally:
     import nbank.core as nbank
-    from dlab.nbank import find_resources, find_resource, fetch_resource
+    from dlab.nbank import fetch_resource, find_resource, find_resources  # noqa: F401
 
 
 def setup_log(log, debug=False):
@@ -44,7 +44,7 @@ class Waveform(TypedDict):
 def load_wave(path: Union[str, Path]) -> Waveform:
     with ewave.open(path, "r") as fp:
         if fp.nchannels != 1:
-            raise ValueError(f"{file} has more than one channel")
+            raise ValueError(f"{path} has more than one channel")
         data = ewave.rescale(fp.read(), "float32")
         ampl = dBFS(data)
         return Waveform(

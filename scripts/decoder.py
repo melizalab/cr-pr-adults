@@ -12,6 +12,7 @@ import numpy as np
 import pandas as pd
 import samplerate
 from appdirs import user_cache_dir
+from core import default_registry, find_resources
 from dlab import pprox
 from gammatone.filters import erb_space
 from gammatone.gtgram import gtgram, gtgram_strides
@@ -22,8 +23,6 @@ from sklearn.linear_model import Ridge
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-
-from core import find_resources, default_registry
 
 _cache_dir = user_cache_dir("preconstruct", "melizalab")
 _mem = Memory(_cache_dir, verbose=0)
@@ -185,7 +184,8 @@ def main(argv=None):
     )
     parser.add_argument(
         "units",
-        help="path of a file with a list of units, or name of a site to analyze",
+        type=Path,
+        help="path of a file with a list of units",
     )
     args = parser.parse_args(argv)
     logging.basicConfig(
@@ -194,23 +194,11 @@ def main(argv=None):
     logging.info("- start time: %s", datetime.datetime.now())
     logging.info("- version: %s", __version__)
 
-    try:
-        unit_file = Path(args.units)
-        unit_names = [line.strip() for line in open(unit_file)]
-        logging.info(
-            "- loading responses for %d units in %s", len(unit_names), unit_file
-        )
-        dataset_name = unit_file.stem
-    except FileNotFoundError:
-        logging.info("- loading responses from units in site '%s'", args.units)
-        unit_names = [
-            record["name"]
-            for record in nbank.search(
-                nbank.default_registry, name=args.units, dtype="spikes-pprox"
-            )
-        ]
-        logging.info("  - site has %d units", len(unit_names))
-        dataset_name = args.units
+    unit_names = [line.strip() for line in open(args.units)]
+    logging.info(
+        "- loading responses for %d units in %s", len(unit_names), args.units
+    )
+    dataset_name = args.units.stem
     logging.info("  - dataset name: %s", dataset_name)
 
     if args.n_units is not None:
