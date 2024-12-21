@@ -18,7 +18,7 @@ The data for the analysis has been deposited as zip files in three figshare data
 
 To download, verify, and unpack the datasets, run `batch/fetch_datasets.sh`. 
 
-## Analysis
+## Setup and general notes
 
 Temporary files are created in the `build` directory. You may need to create this first if it doesn't already exist. To restart the analysis from the beginning, you can just clear this directory out.
 
@@ -26,7 +26,7 @@ The code is a combination of scripts and Jupyter notebooks. You typically need t
 
 If you're starting from a fresh repository, see `docs/installation.md` for instructions about how to set up your Python and R environments. There are some steps that more or less need to be run on a high-performance computing cluster. See `docs/rivanna.md` for the steps we use to set this up on UVA's HPC cluster Rivanna.
 
-### Acoustical environment statistics
+## Acoustical environment statistics
 
 The amplitude statistics for the colony and pair settings are in the `zebf-social-acoustical-stats` dataset as CSV files. The texture statistics (McDermott and Simoncelli 2011) need to be calculated from the sample wave files. There are instructions in the `notebooks/figure1_acoustical-stats.ipynb` Jupyter notebook.
 

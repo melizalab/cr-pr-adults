@@ -4,7 +4,7 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Callable, Dict, TypedDict, Union
+from typing import Callable, Dict, TypedDict, Union, Optional
 
 import ewave
 import numpy as np
@@ -17,7 +17,9 @@ try:
     default_registry = os.environ["NBANK_REGISTRY"]
 except KeyError:
     os.environ["NBANK_REGISTRY"] = ""
+    default_registry = None
 finally:
+    import nbank.core as nbank
     from dlab.nbank import find_resources, find_resource, fetch_resource
 
 
@@ -165,16 +167,22 @@ class MotifBackgroundSplitter(MotifSplitter):
 def split_trials(
     splitter: Callable[[str, Dict], pd.DataFrame],
     trials: pprox.Collection,
-    metadata_dir: Path,
+    metadata_dir: Optional[Path] = None,
 ) -> pd.DataFrame:
     """For each trial, split into motifs using splitter"""
     # this is basically a wrapper around pprox.split_trial that caches
     stim_info = {}
-    for trial in trials["pprox"]:
-        stim_name = trial["stimulus"]["name"]
-        metadata_file = (metadata_dir / stim_name).with_suffix(".json")
-        with open(metadata_file) as fp:
-            stim_info[stim_name] = json.load(fp)
+    stim_names = {trial["stimulus"]["name"] for trial in trials["pprox"]}
+    # try to load from local metadata directory first
+    if metadata_dir is not None:
+        for stim_name in stim_names:
+            metadata_file = (metadata_dir / stim_name).with_suffix(".json")
+            if metadata_file.exists():
+                stim_info[stim_name] = json.loads(metadata_file.read_text())
+    to_locate = stim_names - stim_info.keys()
+    if len(to_locate) > 0:
+        for result in nbank.describe_many(default_registry, *to_locate):
+            stim_info[result["name"]] = result["metadata"]
 
     def wrapper(resource_id):
         return splitter(resource_id, stim_info)

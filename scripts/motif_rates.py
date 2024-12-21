@@ -5,9 +5,10 @@ import json
 import logging
 import sys
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
-from core import MotifBackgroundSplitter, split_trials
+from core import MotifBackgroundSplitter, split_trials, find_resource
 
 clean_dBFS = -100
 
@@ -29,16 +30,18 @@ def main(argv=None):
         "--metadata-dir",
         "-m",
         type=Path,
-        required=True,
         help="the directory where stimulus metadata files are stored",
     )
-    parser.add_argument("unit", type=Path, help="pprox data (one unit) to analyze")
+    parser.add_argument("unit", type=Path, help="pprox data (name of unit or path to file) to analyze")
     args = parser.parse_args(argv)
     logging.basicConfig(
         format="%(message)s", level=logging.DEBUG if args.debug else logging.INFO
     )
 
-    pprox_file = args.unit
+    if args.unit.exists():
+        pprox_file = args.unit
+    else:
+        pprox_file = find_resource(str(args.unit))
     logging.info("- reading spikes from %s", pprox_file)
     unit = json.loads(pprox_file.read_text())
     logging.info("- splitting trials by motif")
