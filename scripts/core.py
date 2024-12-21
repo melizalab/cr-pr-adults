@@ -2,6 +2,7 @@
 """ Core functions for processing responses and stimuli """
 import json
 import logging
+import os
 from pathlib import Path
 from typing import Callable, Dict, TypedDict, Union
 
@@ -10,6 +11,14 @@ import numpy as np
 import pandas as pd
 import pyspike
 from dlab import pprox
+
+# shim for older versions of neurobank that give an error if NBANK_REGISTRY isn't set
+try:
+    default_registry = os.environ["NBANK_REGISTRY"]
+except KeyError:
+    os.environ["NBANK_REGISTRY"] = ""
+finally:
+    from dlab.nbank import find_resources, find_resource, fetch_resource
 
 
 def setup_log(log, debug=False):
