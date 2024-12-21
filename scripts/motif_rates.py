@@ -5,7 +5,6 @@ import json
 import logging
 import sys
 from pathlib import Path
-from typing import Optional
 
 import pandas as pd
 from core import MotifBackgroundSplitter, split_trials, find_resource

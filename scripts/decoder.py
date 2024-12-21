@@ -12,15 +12,18 @@ import numpy as np
 import pandas as pd
 import samplerate
 from appdirs import user_cache_dir
-from dlab import nbank, pprox
+from dlab import pprox
 from gammatone.filters import erb_space
 from gammatone.gtgram import gtgram, gtgram_strides
 from joblib import Memory
+from nbank.core import describe_many
 from scipy.linalg import hankel
 from sklearn.linear_model import Ridge
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
+
+from core import find_resources, default_registry
 
 _cache_dir = user_cache_dir("preconstruct", "melizalab")
 _mem = Memory(_cache_dir, verbose=0)
@@ -44,18 +47,28 @@ clean_dBFS = -100
 
 
 class MotifSplitter:
-    """Used with pprox.split_trial for splitting long responses into constituent units"""
-
-    def __init__(self, resource_ids):
+    """ This is like MotifSplitter in core, but it caches the splits ahead of time """
+    
+    def __init__(self, resource_ids, metadata_dir: Path):
+        stim_names = set(resource_ids)
         self.stim_info = {}
-        for result in nbank.describe_many(nbank.default_registry, *resource_ids):
-            metadata = result["metadata"]
-            metadata["foreground"] = metadata["foreground"].split("-")
-            self.stim_info[result["name"]] = pd.DataFrame(metadata)
+        # try to load from local metadata directory first
+        for stim_name in stim_names:
+            metadata_file = (metadata_dir / stim_name).with_suffix(".json")
+            if metadata_file.exists():
+                metadata = json.loads(metadata_file.read_text())
+                metadata["foreground"] = metadata["foreground"].split("-")
+                self.stim_info[stim_name] = pd.DataFrame(metadata)
+        to_locate = stim_names - self.stim_info.keys()
+        if len(to_locate) > 0:
+            for result in describe_many(default_registry, *to_locate):
+                metadata[result["name"]] = result["metadata"]
+                metadata["foreground"] = metadata["foreground"].split("-")
+                self.stim_info[stim_name] = pd.DataFrame(metadata)
 
     def __call__(self, resource_id: str) -> pd.DataFrame:
         return self.stim_info[resource_id]
-
+    
 
 def compute_spectrogram(row):
     duration = row.samples.size / row.sample_rate
@@ -144,6 +157,16 @@ def main(argv=None):
         help="search this directory for pprox files before the registry",
     )
     parser.add_argument(
+        "--metadata-dir",
+        type=Path,
+        help="the directory where stimulus metadata files are stored",
+    )
+    parser.add_argument(
+        "--stim-dir",
+        type=Path,
+        help="the directory where stimulus files are stored",
+    )
+    parser.add_argument(
         "--n-units",
         "-n",
         type=int,
@@ -205,7 +228,7 @@ def main(argv=None):
         args.random_seed = 0
 
     all_trials = []
-    for unit_name, path in nbank.find_resources(*unit_names, alt_base=args.pprox_dir):
+    for unit_name, path in find_resources(*unit_names, alt_base=args.pprox_dir):
         # this will raise an error if the file was not found
         pprox_data = json.loads(path.read_text())
         # only clean stimuli
@@ -219,7 +242,7 @@ def main(argv=None):
 
     logging.info("- splitting trials into individual motifs")
     long_stim_names = {trial["stimulus"]["name"] for trial in all_trials}
-    splitter = MotifSplitter(long_stim_names)
+    splitter = MotifSplitter(long_stim_names, args.metadata_dir)
     recording = []
     for trial in all_trials:
         trial_split = pprox.split_trial(trial, splitter)
@@ -236,7 +259,7 @@ def main(argv=None):
     logging.info("- loading stimuli")
     stim_names = recording.index.get_level_values("stimulus").unique()
     stimuli = []
-    for stim_name, stim_path in nbank.find_resources(*stim_names):
+    for stim_name, stim_path in find_resources(*stim_names, alt_base=args.stim_dir):
         with ewave.open(stim_path, "r") as fp:
             samples = ewave.rescale(fp.read(), "f")
             resampled = samplerate.resample(

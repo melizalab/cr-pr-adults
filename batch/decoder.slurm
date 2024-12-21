@@ -15,7 +15,8 @@ PYTHON=${HOME}/.conda/envs/cr-pr-adults/bin/python3
 OUTDIR="build/"
 mkdir -p ${OUTDIR}
 
+DATASET_DIR="datasets/zebf-social-acoustical-ephys"
 CONTROL_FILE="inputs/decoder_tasks.txt"
 sed -n "${SLURM_ARRAY_TASK_ID}"p ${CONTROL_FILE} | { read UNIT_LIST N_UNITS SEED
-${PYTHON} scripts/decoder.py ${OPTIONS} --n-units ${N_UNITS} --random-seed ${SEED} -o ${OUTDIR} ${UNIT_LIST}
+${PYTHON} scripts/decoder.py ${OPTIONS} --n-units ${N_UNITS} --random-seed ${SEED} -o ${OUTDIR} --pprox-dir ${DATASET_DIR}/responses --metadata-dir ${DATASET_DIR}/metadata --stim-dir ${DATASET_DIR}/stimuli ${UNIT_LIST}
 }
