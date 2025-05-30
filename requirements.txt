@@ -26,7 +26,7 @@ ewave==1.0.9
     # via melizalab-tools
 fonttools==4.55.1
     # via matplotlib
-h11==0.14.0
+h11==0.16.0
     # via httpcore
 h5py==3.12.1
     # via arf
