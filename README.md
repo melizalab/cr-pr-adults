@@ -2,7 +2,7 @@
 
 [![DOI](https://zenodo.org/badge/899210556.svg)](https://doi.org/10.5281/zenodo.14578000)
 
-This repository contains analysis code to accompany Moseley and Meliza, "A complex acoustical environment during development enhances auditory perception and coding efficiency in the zebra finch", currently in press at the Journal of Neuroscience. A preprint can be found at [bioRxiv](https://www.biorxiv.org/content/10.1101/2024.06.25.600670v2).
+This repository contains analysis code to accompany Moseley and Meliza, "A complex acoustical environment during development enhances auditory perception and coding efficiency in the zebra finch", published in 2025 at the [Journal of Neuroscience](https://doi.org/10.1523/JNEUROSCI.1269-24.2024).
 
 This README file describes the key steps in running the analysis, including links to
 data files hosted on public repositories. See the `docs` folder for information
